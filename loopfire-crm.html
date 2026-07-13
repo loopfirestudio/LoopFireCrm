@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loopfire · Marketing CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+:root {
+  --ink: #121319;
+  --ink-soft: #1A1C24;
+  --ink-surface: #20232D;
+  --ink-border: #2C303C;
+  --mist: #EDEBE6;
+  --mist-dim: #9A9CA8;
+  --mist-faint: #5F6270;
+  --violet: #8B7CFF;
+  --violet-soft: #6F5FE0;
+  --ember: #FFB454;
+  --coral: #FF6F61;
+  --mint: #5FE0B7;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--mist);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--violet); color: var(--ink); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-border); border-radius: 8px; }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+.hidden { display: none !important; }
+.mono { font-family: "JetBrains Mono", monospace; }
+.flex-1 { flex: 1; }
+
+/* Layout */
+.app { display: flex; height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--ink-border);
+  background: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.brand { padding: 24px 20px 20px; display: flex; align-items: center; gap: 10px; }
+.brand-name { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 15px; letter-spacing: -0.2px; margin: 0; line-height: 1; }
+.brand-sub { font-size: 10px; color: var(--mist-faint); letter-spacing: 0.5px; margin: 4px 0 0; }
+
+.nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 13.5px; font-weight: 500; color: var(--mist-dim);
+  font-family: inherit; transition: color .15s, background-color .15s;
+}
+.nav-item:hover { color: var(--mist); background: rgba(255,255,255,0.03); }
+.nav-item.active { background: var(--ink-surface); color: var(--mist); }
+.nav-item.active svg { color: var(--violet); stroke: var(--violet); }
+.nav-count { margin-left: auto; font-size: 11px; font-family: "JetBrains Mono", monospace; color: var(--mist-faint); }
+
+.sidebar-foot { padding: 16px 20px; border-top: 1px solid var(--ink-border); font-size: 11px; color: var(--mist-faint); line-height: 1.5; }
+.sidebar-foot .mono { color: var(--mist-dim); }
+
+.main { flex: 1; overflow-y: auto; }
+.view { padding: 32px; max-width: 1180px; animation: fadeUp .35s ease-out; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 22px; margin: 0; }
+.page-header p { font-size: 13px; color: var(--mist-dim); margin: 4px 0 0; }
+.page-header-row { display: flex; align-items: flex-start; justify-content: space-between; }
+
+.error-banner {
+  margin: 24px 32px 0; padding: 12px; border-radius: 8px;
+  background: rgba(255,111,97,0.1); border: 1px solid rgba(255,111,97,0.3);
+  color: var(--coral); font-size: 12.5px;
+}
+
+.empty-state { max-width: 420px; }
+.empty-state h1 { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 22px; margin: 0 0 8px; }
+.empty-state p { font-size: 13.5px; color: var(--mist-dim); line-height: 1.6; margin: 0; }
+
+/* Stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  padding: 16px; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stat-top span { font-size: 12px; color: var(--mist-dim); }
+.stat-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.stat-value { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 26px; margin: 0; line-height: 1; }
+.stat-sub { font-size: 11.5px; color: var(--mist-faint); margin: 8px 0 0; }
+
+/* Cards */
+.two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  padding: 20px; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+.card h2 { font-size: 13px; font-weight: 500; margin: 0 0 16px; }
+
+/* Pipeline funnel */
+.funnel-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.funnel-row:last-child { margin-bottom: 0; }
+.funnel-label { font-size: 12px; color: var(--mist-dim); width: 92px; flex-shrink: 0; }
+.funnel-track { flex: 1; height: 8px; border-radius: 999px; background: var(--ink-surface); overflow: hidden; }
+.funnel-bar { height: 100%; border-radius: 999px; transition: width .3s; }
+.funnel-count { font-size: 12px; font-family: "JetBrains Mono", monospace; width: 24px; text-align: right; flex-shrink: 0; }
+
+/* Platform chart */
+.platform-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.platform-row:last-child { margin-bottom: 0; }
+.platform-label { font-size: 12px; color: var(--mist-dim); width: 88px; flex-shrink: 0; text-align: right; }
+.platform-track { flex: 1; height: 14px; border-radius: 4px; background: var(--ink-surface); overflow: hidden; }
+.platform-bar { height: 100%; background: var(--violet); border-radius: 4px; transition: width .3s; }
+.platform-count { font-size: 12px; font-family: "JetBrains Mono", monospace; width: 20px; flex-shrink: 0; }
+.chart-empty { font-size: 12.5px; color: var(--mist-faint); padding: 8px 0; }
+
+/* Recent list */
+.recent-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--ink-border);
+  background: none; border-left: none; border-right: none; border-top: none;
+  width: 100%; cursor: pointer; text-align: left; font-family: inherit;
+  transition: opacity .15s;
+}
+.recent-row:last-child { border-bottom: none; }
+.recent-row:hover { opacity: 0.8; }
+.recent-left { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--ink-surface); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--mist-dim); flex-shrink: 0; }
+.recent-name { font-size: 13px; margin: 0; color: var(--mist); }
+.recent-sub { font-size: 11.5px; margin: 0; color: var(--mist-faint); }
+
+/* Badge */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 500; }
+.badge-dot { width: 6px; height: 6px; border-radius: 999px; }
+
+/* Toolbar */
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab-group { display: flex; background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 8px; padding: 2px; }
+.tab { padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 500; background: none; border: none; color: var(--mist-faint); cursor: pointer; font-family: inherit; transition: color .15s, background-color .15s; }
+.tab:hover { color: var(--mist-dim); }
+.tab.active { background: var(--ink-surface); color: var(--mist); }
+
+.select {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 8px;
+  padding: 7px 10px; font-size: 12.5px; color: var(--mist-dim); font-family: inherit; outline: none;
+}
+
+.search-box { position: relative; margin-left: auto; }
+.search-box svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--mist-faint); }
+.search-box input {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 8px;
+  padding: 7px 12px 7px 32px; font-size: 12.5px; color: var(--mist); width: 200px;
+  outline: none; font-family: inherit;
+}
+.search-box input::placeholder { color: var(--mist-faint); }
+.search-box input:focus { border-color: var(--violet); }
+
+/* Table */
+.table-card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  overflow: hidden; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+table { width: 100%; border-collapse: collapse; text-align: left; }
+thead tr { border-bottom: 1px solid var(--ink-border); }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--mist-faint); font-weight: 500; padding: 12px 16px; }
+td { padding: 12px 16px; border-bottom: 1px solid var(--ink-border); font-size: 12.5px; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { cursor: pointer; transition: background-color .15s; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+.row-name-cell { display: flex; align-items: center; gap: 10px; }
+.row-name { font-size: 13px; color: var(--mist); margin: 0; }
+.row-sub { font-size: 11px; color: var(--mist-faint); margin: 0; }
+.platform-cell { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mist-dim); }
+.priority-cell { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mist-dim); }
+.priority-dot { width: 6px; height: 6px; border-radius: 999px; }
+.empty-row td { text-align: center; padding: 40px 16px; color: var(--mist-faint); font-size: 13px; }
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--violet); color: var(--ink); font-weight: 500; font-size: 13px;
+  border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-family: inherit;
+  transition: background-color .15s;
+}
+.btn-primary:hover { background: var(--violet-soft); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--mist-faint); cursor: pointer;
+  padding: 8px; border-radius: 8px; transition: color .15s, background-color .15s;
+}
+.icon-btn:hover { color: var(--mist); background: rgba(255,255,255,0.03); }
+.icon-btn.danger:hover { color: var(--coral); background: rgba(255,111,97,0.1); }
+
+/* Drawer */
+.drawer-overlay { position: fixed; inset: 0; z-index: 50; display: flex; justify-content: flex-end; }
+.drawer-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+.drawer {
+  position: relative; width: 420px; max-width: 92vw; background: var(--ink-soft);
+  border-left: 1px solid var(--ink-border); height: 100%; overflow-y: auto;
+  animation: fadeUp .3s ease-out; box-shadow: -8px 0 24px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column;
+}
+.drawer-head {
+  position: sticky; top: 0; background: var(--ink-soft); border-bottom: 1px solid var(--ink-border);
+  padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 2;
+}
+.drawer-head h2 { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 15px; margin: 0; }
+.drawer-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+.drawer-foot {
+  position: sticky; bottom: 0; background: var(--ink-soft); border-top: 1px solid var(--ink-border);
+  padding: 16px 20px; display: flex; align-items: center; gap: 8px;
+}
+
+.field label { display: block; font-size: 11.5px; font-weight: 500; color: var(--mist-faint); margin-bottom: 6px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+input, select, textarea {
+  width: 100%; background: var(--ink-surface); border: 1px solid var(--ink-border); border-radius: 8px;
+  padding: 8px 10px; font-size: 12.5px; color: var(--mist); outline: none; font-family: inherit;
+  transition: border-color .15s;
+}
+input::placeholder, textarea::placeholder { color: var(--mist-faint); }
+input:focus, select:focus, textarea:focus { border-color: var(--violet); }
+textarea { resize: none; }
+
+.input-with-icon { display: flex; align-items: center; gap: 6px; }
+.input-with-icon a { color: var(--mist-faint); flex-shrink: 0; transition: color .15s; }
+.input-with-icon a:hover { color: var(--violet); }
+
+.priority-group { display: flex; gap: 6px; }
+.priority-group button {
+  flex: 1; padding: 7px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  background: transparent; border: 1px solid var(--ink-border); color: var(--mist-faint);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.priority-group button.active { border-color: var(--violet); color: var(--violet); background: rgba(139,124,255,0.1); }
+
+/* Content-Typ Chips (Mehrfachauswahl) */
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-group button {
+  padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  background: transparent; border: 1px solid var(--ink-border); color: var(--mist-faint);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.chip-group button.active { border-color: var(--mint); color: var(--mint); background: rgba(95,224,183,0.1); }
+
+/* Content-Typ Badges in Tabelle */
+.content-type-cell { display: flex; flex-wrap: wrap; gap: 4px; max-width: 170px; }
+.content-type-tag {
+  font-size: 10.5px; font-weight: 500; padding: 2px 7px; border-radius: 999px;
+  background: rgba(95,224,183,0.12); color: var(--mint); white-space: nowrap;
+}
+.content-type-more { font-size: 10.5px; color: var(--mist-faint); padding: 2px 4px; }
+.content-type-empty { font-size: 12px; color: var(--mist-faint); }
+
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--mist-dim); cursor: pointer; }
+.checkbox-row input { width: auto; accent-color: var(--violet); }
+
+.decline-btn { margin-top: 10px; background: none; border: none; font-size: 11.5px; font-weight: 500; color: var(--mist-faint); cursor: pointer; font-family: inherit; padding: 0; }
+.decline-btn:hover { color: var(--coral); }
+.decline-btn.active { color: var(--coral); }
+
+/* Pipeline stepper (drawer) */
+.stepper-track { display: flex; align-items: center; }
+.stepper-node {
+  width: 24px; height: 24px; border-radius: 999px; border: 2px solid var(--ink-border);
+  background: transparent; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .15s; padding: 0;
+}
+.stepper-node-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
+.stepper-connector { height: 2px; flex: 1; margin: 0 4px; background: var(--ink-border); border-radius: 2px; transition: background-color .15s; }
+.stepper-connector:last-child { display: none; }
+.stepper-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+.stepper-labels span { font-size: 10px; font-family: "JetBrains Mono", monospace; color: var(--mist-faint); width: 24px; text-align: center; margin-left: -12px; }
+.stepper-labels span:first-child { margin-left: 0; }
+
+@media (max-width: 800px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .sidebar { width: 180px; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <path
+            d="M13 2C9 7 6 10.5 6 15a7 7 0 0 0 14 0c0-2.4-1-4.3-2.4-6 .3 2-.4 3.4-1.6 4-0.2-2.6-1.4-4.8-3-6.6C12 8 11.3 9.6 11.3 11c0-3.2 1-6.4 1.7-9Z"
+            fill="url(#g)"
+          />
+          <defs>
+            <linearGradient id="g" x1="6" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8B7CFF" />
+              <stop offset="1" stop-color="#FFB454" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <p class="brand-name">Loopfire</p>
+          <p class="brand-sub">MARKETING CRM</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-view="contacts">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Kontakte
+          <span class="nav-count" id="nav-count"></span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        Firestore · Datenbank <span class="mono">marketing</span>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div id="error-banner" class="error-banner hidden"></div>
+
+      <!-- Dashboard view -->
+      <section id="view-dashboard" class="view">
+        <header class="page-header">
+          <h1>Dashboard</h1>
+          <p>Überblick über eure Marketing-Kontakte und Reichweite.</p>
+        </header>
+
+        <div id="dashboard-empty" class="empty-state hidden">
+          <h1>Noch keine Marketingdaten</h1>
+          <p>Sobald ihr Content Creator oder Presse-Kontakte unter „Kontakte“ anlegt, sammeln sich hier eure Reichweiten-, Pipeline- und Performance-Statistiken.</p>
+        </div>
+
+        <div id="dashboard-content" class="hidden">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-top"><span>Kontakte gesamt</span><div class="stat-icon" style="background:#8B7CFF1A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B7CFF" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div>
+              <p class="stat-value" id="stat-total">0</p>
+              <p class="stat-sub" id="stat-total-sub"></p>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top"><span>Gesamtreichweite</span><div class="stat-icon" style="background:#FFB4541A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFB454" stroke-width="2"><path d="M4.93 19.07a10 10 0 0 1 0-14.14M7.76 16.24a6 6 0 0 1 0-8.49m4.31 10.6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></div></div>
+              <p class="stat-value" id="stat-reach">0</p>
+              <p class="stat-sub">Summe aller Follower / Abonnenten</p>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top"><span>Views aus Content</span><div class="stat-icon" style="background:#5FE0B71A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5FE0B7" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></div></div>
+              <p class="stat-value" id="stat-views">0</p>
+              <p class="stat-sub">Aufrufe veröffentlichter Beiträge</p>
+            </div>
+            <div class="stat-card">
+              <div class="stat-top"><span>Conversion-Rate</span><div class="stat-icon" style="background:#FF6F611A"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6F61" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/></svg></div></div>
+              <p class="stat-value" id="stat-conversion">0%</p>
+              <p class="stat-sub">Kontaktiert → veröffentlicht</p>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <h2>Pipeline</h2>
+              <div id="pipeline-funnel"></div>
+            </div>
+            <div class="card">
+              <h2>Kontakte pro Plattform</h2>
+              <div id="platform-chart"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Zuletzt aktualisiert</h2>
+            <div id="recent-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contacts view -->
+      <section id="view-contacts" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Kontakte</h1>
+            <p>Content Creator &amp; Presse — Bearbeitungsstand auf einen Blick.</p>
+          </div>
+          <button class="btn-primary" id="btn-new-contact">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Neuer Kontakt
+          </button>
+        </header>
+
+        <div class="toolbar">
+          <div class="tab-group" id="type-filter">
+            <button class="tab active" data-type="all">Alle</button>
+            <button class="tab" data-type="creator">Creator</button>
+            <button class="tab" data-type="press">Presse</button>
+          </div>
+          <select id="status-filter" class="select"></select>
+          <select id="content-type-filter" class="select"></select>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="search-input" type="text" placeholder="Name suchen…" />
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Plattform</th>
+                <th>Content-Typ</th>
+                <th>Reichweite</th>
+                <th>Priorität</th>
+                <th>Status</th>
+                <th>Letzter Kontakt</th>
+              </tr>
+            </thead>
+            <tbody id="contacts-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Drawer / Modal -->
+  <div id="drawer-overlay" class="drawer-overlay hidden">
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <div class="drawer">
+      <div class="drawer-head">
+        <h2 id="drawer-title">Neuer Kontakt</h2>
+        <button class="icon-btn" id="drawer-close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="field">
+          <label>Name</label>
+          <input id="f-name" type="text" placeholder="z. B. Sarah Plays" />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Typ</label>
+            <select id="f-type">
+              <option value="creator">Content Creator</option>
+              <option value="press">Presse / Media</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Plattform</label>
+            <select id="f-platform"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Content-Typ</label>
+          <div class="chip-group" id="f-content-types"></div>
+        </div>
+
+        <div class="field">
+          <label>Profil-URL</label>
+          <div class="input-with-icon">
+            <input id="f-profileUrl" type="text" placeholder="https://…" />
+            <a id="f-profileUrl-link" href="#" target="_blank" rel="noreferrer" class="hidden">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>E-Mail</label>
+            <input id="f-email" type="text" placeholder="kontakt@…" />
+          </div>
+          <div class="field">
+            <label>Follower / Reichweite</label>
+            <input id="f-followers" type="number" placeholder="0" class="mono" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Priorität</label>
+          <div class="priority-group" id="f-priority">
+            <button type="button" data-priority="low">Niedrig</button>
+            <button type="button" data-priority="medium">Mittel</button>
+            <button type="button" data-priority="high">Hoch</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Bearbeitungsstand</label>
+          <div id="f-stepper"></div>
+          <button type="button" id="f-decline-btn" class="decline-btn">Als abgelehnt markieren</button>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="f-keySent" />
+          Key / Review-Code wurde versendet
+        </label>
+
+        <div class="field">
+          <label>Link zum veröffentlichten Content</label>
+          <input id="f-contentUrl" type="text" placeholder="https://…" />
+        </div>
+
+        <div class="field">
+          <label>Views / Aufrufe</label>
+          <input id="f-views" type="number" placeholder="0" class="mono" />
+        </div>
+
+        <div class="field">
+          <label>Letzter Kontakt</label>
+          <input id="f-lastContactAt" type="date" />
+        </div>
+
+        <div class="field">
+          <label>Notizen</label>
+          <textarea id="f-notes" rows="4" placeholder="Absprachen, Deadlines, Besonderheiten…"></textarea>
+        </div>
+      </div>
+
+      <div class="drawer-foot">
+        <button class="icon-btn danger hidden" id="drawer-delete">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z"/></svg>
+        </button>
+        <button class="btn-primary flex-1" id="drawer-save">Kontakt anlegen</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+// ─────────────────────────────────────────────────────────
+// Firebase Setup — läuft direkt im Browser, kein Build nötig.
+// Wichtig: Der Import wird weiter unten DYNAMISCH (per import())
+// innerhalb von initFirebase() geladen, NICHT als statischer
+// Top-Level-Import. Grund: Ein statischer Import, der fehlschlägt
+// (Netzwerk, CDN, Adblocker, …), würde die gesamte Datei abbrechen
+// lassen — inklusive aller Event-Listener für die Buttons weiter
+// unten. Mit einem dynamischen Import in einem try/catch bleibt die
+// Oberfläche auch dann bedienbar, wenn Firestore gerade nicht
+// erreichbar ist.
+// ─────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAy16r_mgPt39-O5ol2CWShH-Zl_v13OoU",
+  authDomain: "loopfire-studio.firebaseapp.com",
+  databaseURL: "https://loopfire-studio-default-rtdb.firebaseio.com",
+  projectId: "loopfire-studio",
+  storageBucket: "loopfire-studio.firebasestorage.app",
+  messagingSenderId: "671968406115",
+  appId: "1:671968406115:web:d5250c8fb2d43034b26656",
+};
+
+const CONTACTS = "contacts";
+let db = null; // wird von initFirebase() gesetzt, sobald Firebase bereit ist
+let fs = null; // hält die firestore-Funktionen (collection, doc, addDoc, …)
+
+// ─────────────────────────────────────────────────────────
+// Konstanten
+// ─────────────────────────────────────────────────────────
+const PIPELINE = [
+  { id: "new", label: "Neu", color: "#5F6270" },
+  { id: "contacted", label: "Kontaktiert", color: "#8B7CFF" },
+  { id: "negotiating", label: "Verhandlung", color: "#FFB454" },
+  { id: "key_sent", label: "Key gesendet", color: "#5FE0B7" },
+  { id: "posted", label: "Veröffentlicht", color: "#5FE0B7" },
+  { id: "declined", label: "Abgelehnt", color: "#FF6F61" },
+];
+const FLOW = PIPELINE.filter((s) => s.id !== "declined");
+const statusById = (id) => PIPELINE.find((s) => s.id === id) || PIPELINE[0];
+
+const PLATFORMS = [
+  { id: "youtube", label: "YouTube" },
+  { id: "twitch", label: "Twitch" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "instagram", label: "Instagram" },
+  { id: "x", label: "X / Twitter" },
+  { id: "press", label: "Presse-Outlet" },
+  { id: "other", label: "Sonstiges" },
+];
+const platformById = (id) => PLATFORMS.find((p) => p.id === id) || PLATFORMS[PLATFORMS.length - 1];
+
+const PRIORITIES = [
+  { id: "low", label: "Niedrig", color: "#5F6270" },
+  { id: "medium", label: "Mittel", color: "#FFB454" },
+  { id: "high", label: "Hoch", color: "#FF6F61" },
+];
+
+// Content-Typ = welche Art von Content dieser Kontakt für uns erstellt.
+// Mehrfachauswahl möglich (z. B. gleichzeitig Let's Player & Reviewer).
+const CONTENT_TYPES = [
+  { id: "beta_tester", label: "Beta-Tester" },
+  { id: "demo_tester", label: "Demo-Tester" },
+  { id: "reviewer", label: "Spiele-Reviewer" },
+  { id: "trailer", label: "Trailer-Publisher" },
+  { id: "letsplay", label: "Let's Player" },
+  { id: "streamer", label: "Streamer" },
+  { id: "guide", label: "Guide / Tutorial" },
+  { id: "article", label: "Presse-Artikel" },
+  { id: "other", label: "Sonstiges" },
+];
+const contentTypeById = (id) => CONTENT_TYPES.find((c) => c.id === id) || { id, label: id };
+
+const EMPTY_FORM = {
+  name: "", type: "creator", platform: "youtube", contentTypes: [], profileUrl: "", email: "",
+  followers: "", priority: "medium", status: "new", keySent: false,
+  contentUrl: "", views: "", lastContactAt: "", notes: "",
+};
+
+// ─────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────
+const state = {
+  contacts: [],
+  loading: true,
+  error: null,
+  view: "dashboard",
+  typeFilter: "all",
+  statusFilter: "all",
+  contentTypeFilter: "all",
+  search: "",
+  drawerOpen: false,
+  activeContact: null,
+  form: { ...EMPTY_FORM },
+};
+
+// ─────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────
+function formatCompact(n) {
+  n = Number(n) || 0;
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+const el = (id) => document.getElementById(id);
+const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+async function saveContact() {
+  const f = state.form;
+  if (!f.name.trim()) return;
+  if (!db) {
+    state.error = "Noch keine Verbindung zu Firestore — bitte kurz warten oder Seite neu laden.";
+    render();
+    return;
+  }
+  const payload = {
+    ...f,
+    followers: Number(f.followers) || 0,
+    views: Number(f.views) || 0,
+    updatedAt: fs.serverTimestamp(),
+  };
+  try {
+    if (state.activeContact?.id) {
+      await fs.updateDoc(fs.doc(db, CONTACTS, state.activeContact.id), payload);
+    } else {
+      payload.createdAt = fs.serverTimestamp();
+      await fs.addDoc(fs.collection(db, CONTACTS), payload);
+    }
+    closeDrawer();
+  } catch (err) {
+    console.error(err);
+    state.error = `Speichern fehlgeschlagen: ${err.message}`;
+    render();
+  }
+}
+
+async function deleteContact(id) {
+  if (!db) {
+    state.error = "Noch keine Verbindung zu Firestore — bitte kurz warten oder Seite neu laden.";
+    render();
+    return;
+  }
+  try {
+    await fs.deleteDoc(fs.doc(db, CONTACTS, id));
+    closeDrawer();
+  } catch (err) {
+    console.error(err);
+    state.error = `Löschen fehlgeschlagen: ${err.message}`;
+    render();
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// Render: Sidebar
+// ─────────────────────────────────────────────────────────
+function renderSidebar() {
+  el("nav-count").textContent = state.contacts.length > 0 ? state.contacts.length : "";
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.view === state.view);
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+// Render: Dashboard
+// ─────────────────────────────────────────────────────────
+function renderDashboard() {
+  const c = state.contacts;
+  const empty = el("dashboard-empty");
+  const content = el("dashboard-content");
+
+  if (state.loading) {
+    empty.classList.add("hidden");
+    content.classList.add("hidden");
+    return;
+  }
+  if (c.length === 0) {
+    empty.classList.remove("hidden");
+    content.classList.add("hidden");
+    return;
+  }
+  empty.classList.add("hidden");
+  content.classList.remove("hidden");
+
+  const totalReach = c.reduce((s, x) => s + (Number(x.followers) || 0), 0);
+  const totalViews = c.reduce((s, x) => s + (Number(x.views) || 0), 0);
+  const engaged = c.filter((x) => x.status !== "new" && x.status !== "declined").length;
+  const posted = c.filter((x) => x.status === "posted").length;
+  const conversion = engaged > 0 ? Math.round((posted / engaged) * 100) : 0;
+
+  el("stat-total").textContent = c.length;
+  el("stat-total-sub").textContent = `${c.filter((x) => x.type === "creator").length} Creator · ${c.filter((x) => x.type === "press").length} Presse`;
+  el("stat-reach").textContent = formatCompact(totalReach);
+  el("stat-views").textContent = formatCompact(totalViews);
+  el("stat-conversion").textContent = `${conversion}%`;
+
+  // Pipeline funnel
+  const counts = Object.fromEntries(PIPELINE.map((s) => [s.id, 0]));
+  c.forEach((x) => { counts[x.status] = (counts[x.status] || 0) + 1; });
+  const max = Math.max(1, ...FLOW.map((s) => counts[s.id] || 0));
+  el("pipeline-funnel").innerHTML = FLOW.map((s) => {
+    const count = counts[s.id] || 0;
+    const pct = Math.max(4, (count / max) * 100);
+    return `
+      <div class="funnel-row">
+        <span class="funnel-label">${s.label}</span>
+        <div class="funnel-track"><div class="funnel-bar" style="width:${pct}%;background:${s.color}"></div></div>
+        <span class="funnel-count">${count}</span>
+      </div>`;
+  }).join("");
+
+  // Platform distribution
+  const byPlatform = {};
+  c.forEach((x) => { const k = x.platform || "other"; byPlatform[k] = (byPlatform[k] || 0) + 1; });
+  const platformData = Object.entries(byPlatform)
+    .map(([id, count]) => ({ label: platformById(id).label, count }))
+    .sort((a, b) => b.count - a.count);
+  const pmax = Math.max(1, ...platformData.map((p) => p.count));
+  el("platform-chart").innerHTML = platformData.length
+    ? platformData.map((p) => `
+        <div class="platform-row">
+          <span class="platform-label">${esc(p.label)}</span>
+          <div class="platform-track"><div class="platform-bar" style="width:${(p.count / pmax) * 100}%"></div></div>
+          <span class="platform-count">${p.count}</span>
+        </div>`).join("")
+    : `<p class="chart-empty">Noch keine Daten.</p>`;
+
+  // Recent
+  const recent = [...c].sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 5);
+  el("recent-list").innerHTML = recent.map((x) => `
+    <button class="recent-row" data-id="${x.id}">
+      <div class="recent-left">
+        <div class="avatar">${esc(x.name?.[0]?.toUpperCase() || "?")}</div>
+        <div>
+          <p class="recent-name">${esc(x.name)}</p>
+          <p class="recent-sub">${esc(platformById(x.platform).label)}</p>
+        </div>
+      </div>
+      ${badgeHtml(x.status)}
+    </button>`).join("");
+  el("recent-list").querySelectorAll(".recent-row").forEach((btn) => {
+    btn.addEventListener("click", () => openContact(state.contacts.find((x) => x.id === btn.dataset.id)));
+  });
+}
+
+function badgeHtml(status) {
+  const s = statusById(status);
+  return `<span class="badge" style="background:${s.color}1A;color:${s.color}"><span class="badge-dot" style="background:${s.color}"></span>${s.label}</span>`;
+}
+
+// ─────────────────────────────────────────────────────────
+// Render: Contacts table
+// ─────────────────────────────────────────────────────────
+function initStatusFilterOptions() {
+  const sel = el("status-filter");
+  sel.innerHTML = `<option value="all">Alle Status</option>` +
+    PIPELINE.map((s) => `<option value="${s.id}">${s.label}</option>`).join("");
+
+  const ctSel = el("content-type-filter");
+  ctSel.innerHTML = `<option value="all">Alle Content-Typen</option>` +
+    CONTENT_TYPES.map((c) => `<option value="${c.id}">${c.label}</option>`).join("");
+}
+
+function renderContacts() {
+  const tbody = el("contacts-tbody");
+  let list = state.contacts
+    .filter((c) => (state.typeFilter === "all" ? true : c.type === state.typeFilter))
+    .filter((c) => (state.statusFilter === "all" ? true : c.status === state.statusFilter))
+    .filter((c) => (state.contentTypeFilter === "all" ? true : (c.contentTypes || []).includes(state.contentTypeFilter)))
+    .filter((c) => (state.search ? c.name?.toLowerCase().includes(state.search.toLowerCase()) : true));
+
+  if (state.loading) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lade Kontakte …</td></tr>`;
+    return;
+  }
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Keine Kontakte gefunden.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((c) => {
+    const prio = PRIORITIES.find((p) => p.id === c.priority) || PRIORITIES[0];
+    return `
+      <tr data-id="${c.id}">
+        <td>
+          <div class="row-name-cell">
+            <div class="avatar">${esc(c.name?.[0]?.toUpperCase() || "?")}</div>
+            <div>
+              <p class="row-name">${esc(c.name)}</p>
+              <p class="row-sub">${c.type === "creator" ? "Content Creator" : "Presse / Media"}</p>
+            </div>
+          </div>
+        </td>
+        <td><span class="platform-cell">${esc(platformById(c.platform).label)}</span></td>
+        <td>${contentTypeCellHtml(c.contentTypes)}</td>
+        <td class="mono">${formatCompact(c.followers)}</td>
+        <td><span class="priority-cell"><span class="priority-dot" style="background:${prio.color}"></span>${prio.label}</span></td>
+        <td>${badgeHtml(c.status)}</td>
+        <td>${esc(c.lastContactAt) || "—"}</td>
+      </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll("tr[data-id]").forEach((row) => {
+    row.addEventListener("click", () => openContact(state.contacts.find((c) => c.id === row.dataset.id)));
+  });
+}
+
+function contentTypeCellHtml(contentTypes) {
+  const types = contentTypes || [];
+  if (types.length === 0) return `<span class="content-type-empty">—</span>`;
+  const shown = types.slice(0, 2).map((id) => `<span class="content-type-tag">${esc(contentTypeById(id).label)}</span>`).join("");
+  const rest = types.length > 2 ? `<span class="content-type-more">+${types.length - 2}</span>` : "";
+  return `<div class="content-type-cell">${shown}${rest}</div>`;
+}
+
+// ─────────────────────────────────────────────────────────
+// Drawer (Add / Edit)
+// ─────────────────────────────────────────────────────────
+function initDrawerStaticOptions() {
+  el("f-platform").innerHTML = PLATFORMS.map((p) => `<option value="${p.id}">${p.label}</option>`).join("");
+}
+
+function renderStepper() {
+  const wrap = el("f-stepper");
+  const declined = state.form.status === "declined";
+  const activeIdx = FLOW.findIndex((s) => s.id === state.form.status);
+
+  wrap.innerHTML = `<div class="stepper-track">${FLOW.map((s, i) => {
+    const reached = !declined && i <= activeIdx;
+    return `
+      <button type="button" class="stepper-node" data-status="${s.id}" title="${s.label}"
+        style="border-color:${reached ? s.color : "#2C303C"};background:${reached ? s.color : "transparent"}">
+        ${reached ? `<span class="stepper-node-dot"></span>` : ""}
+      </button>
+      <div class="stepper-connector" style="background:${i < activeIdx && !declined ? s.color : "#2C303C"}"></div>`;
+  }).join("")}</div>
+  <div class="stepper-labels">${FLOW.map((s) => `<span>${s.label.split(" ")[0]}</span>`).join("")}</div>`;
+
+  wrap.querySelectorAll(".stepper-node").forEach((btn) => {
+    btn.addEventListener("click", () => { state.form.status = btn.dataset.status; renderStepper(); renderDeclineBtn(); });
+  });
+
+  const declineBtn = el("f-decline-btn");
+  declineBtn.textContent = declined ? "● Abgelehnt" : "Als abgelehnt markieren";
+  declineBtn.classList.toggle("active", declined);
+}
+function renderDeclineBtn() {
+  const declined = state.form.status === "declined";
+  const btn = el("f-decline-btn");
+  btn.textContent = declined ? "● Abgelehnt" : "Als abgelehnt markieren";
+  btn.classList.toggle("active", declined);
+}
+
+function renderPriorityGroup() {
+  el("f-priority").querySelectorAll("button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.priority === state.form.priority);
+  });
+}
+
+function renderContentTypeChips() {
+  const wrap = el("f-content-types");
+  wrap.innerHTML = CONTENT_TYPES.map(
+    (c) => `<button type="button" data-content-type="${c.id}" class="${(state.form.contentTypes || []).includes(c.id) ? "active" : ""}">${c.label}</button>`
+  ).join("");
+  wrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.contentType;
+      const list = state.form.contentTypes || [];
+      state.form.contentTypes = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+      renderContentTypeChips();
+    });
+  });
+}
+
+function fillForm() {
+  const f = state.form;
+  el("f-name").value = f.name;
+  el("f-type").value = f.type;
+  el("f-platform").value = f.platform;
+  el("f-profileUrl").value = f.profileUrl;
+  el("f-email").value = f.email;
+  el("f-followers").value = f.followers;
+  el("f-keySent").checked = !!f.keySent;
+  el("f-contentUrl").value = f.contentUrl;
+  el("f-views").value = f.views;
+  el("f-lastContactAt").value = f.lastContactAt;
+  el("f-notes").value = f.notes;
+
+  const link = el("f-profileUrl-link");
+  if (f.profileUrl) { link.href = f.profileUrl; link.classList.remove("hidden"); }
+  else { link.classList.add("hidden"); }
+
+  renderPriorityGroup();
+  renderContentTypeChips();
+  renderStepper();
+}
+
+function openContact(contact) {
+  state.activeContact = contact || null;
+  state.form = contact ? { ...EMPTY_FORM, ...contact } : { ...EMPTY_FORM };
+  state.drawerOpen = true;
+  el("drawer-title").textContent = contact ? "Kontakt bearbeiten" : "Neuer Kontakt";
+  el("drawer-save").textContent = contact ? "Änderungen speichern" : "Kontakt anlegen";
+  el("drawer-delete").classList.toggle("hidden", !contact);
+  fillForm();
+  el("drawer-overlay").classList.remove("hidden");
+  el("f-name").focus();
+}
+
+function closeDrawer() {
+  state.drawerOpen = false;
+  el("drawer-overlay").classList.add("hidden");
+}
+
+// ─────────────────────────────────────────────────────────
+// Render orchestrator
+// ─────────────────────────────────────────────────────────
+function render() {
+  const errBanner = el("error-banner");
+  if (state.error) {
+    errBanner.textContent = state.error;
+    errBanner.classList.remove("hidden");
+  } else {
+    errBanner.classList.add("hidden");
+  }
+
+  renderSidebar();
+  el("view-dashboard").classList.toggle("hidden", state.view !== "dashboard");
+  el("view-contacts").classList.toggle("hidden", state.view !== "contacts");
+  if (state.view === "dashboard") renderDashboard();
+  else renderContacts();
+}
+
+// ─────────────────────────────────────────────────────────
+// Event wiring
+// ─────────────────────────────────────────────────────────
+document.querySelectorAll(".nav-item").forEach((btn) => {
+  btn.addEventListener("click", () => { state.view = btn.dataset.view; render(); });
+});
+
+el("btn-new-contact").addEventListener("click", () => openContact(null));
+
+document.querySelectorAll("#type-filter .tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    state.typeFilter = btn.dataset.type;
+    document.querySelectorAll("#type-filter .tab").forEach((b) => b.classList.toggle("active", b === btn));
+    renderContacts();
+  });
+});
+
+el("status-filter").addEventListener("change", (e) => { state.statusFilter = e.target.value; renderContacts(); });
+el("content-type-filter").addEventListener("change", (e) => { state.contentTypeFilter = e.target.value; renderContacts(); });
+el("search-input").addEventListener("input", (e) => { state.search = e.target.value; renderContacts(); });
+
+el("drawer-backdrop").addEventListener("click", closeDrawer);
+el("drawer-close").addEventListener("click", closeDrawer);
+el("drawer-save").addEventListener("click", saveContact);
+el("drawer-delete").addEventListener("click", () => { if (state.activeContact) deleteContact(state.activeContact.id); });
+
+el("f-priority").querySelectorAll("button").forEach((btn) => {
+  btn.addEventListener("click", () => { state.form.priority = btn.dataset.priority; renderPriorityGroup(); });
+});
+el("f-decline-btn").addEventListener("click", () => { state.form.status = "declined"; renderStepper(); });
+
+[
+  ["f-name", "name"], ["f-type", "type"], ["f-platform", "platform"], ["f-profileUrl", "profileUrl"],
+  ["f-email", "email"], ["f-followers", "followers"], ["f-contentUrl", "contentUrl"],
+  ["f-views", "views"], ["f-lastContactAt", "lastContactAt"], ["f-notes", "notes"],
+].forEach(([id, key]) => {
+  el(id).addEventListener("input", (e) => { state.form[key] = e.target.value; });
+});
+el("f-keySent").addEventListener("change", (e) => { state.form.keySent = e.target.checked; });
+el("f-profileUrl").addEventListener("input", (e) => {
+  const link = el("f-profileUrl-link");
+  if (e.target.value) { link.href = e.target.value; link.classList.remove("hidden"); }
+  else { link.classList.add("hidden"); }
+});
+
+// ─────────────────────────────────────────────────────────
+// Init — UI ist ab hier bereits vollständig bedienbar,
+// unabhängig davon ob Firebase erreichbar ist.
+// ─────────────────────────────────────────────────────────
+initStatusFilterOptions();
+initDrawerStaticOptions();
+render();
+
+// ─────────────────────────────────────────────────────────
+// Firebase erst JETZT laden — dynamisch, in einem try/catch.
+// Schlägt das fehl (Netzwerk, CDN, Adblocker, falsche Config),
+// bleibt die restliche App trotzdem voll bedienbar; es wird nur
+// eine Fehlermeldung angezeigt statt die ganze Seite lahmzulegen.
+// ─────────────────────────────────────────────────────────
+async function initFirebase() {
+  try {
+    const [{ initializeApp }, firestoreModule] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js"),
+    ]);
+    fs = firestoreModule;
+
+    const app = initializeApp(firebaseConfig);
+    // Zweiter Parameter = Name der Firestore-Datenbank (nicht "(default)")
+    db = fs.getFirestore(app, "marketing");
+
+    const q = fs.query(fs.collection(db, CONTACTS), fs.orderBy("createdAt", "desc"));
+    fs.onSnapshot(
+      q,
+      (snap) => {
+        state.contacts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        state.loading = false;
+        state.error = null;
+        render();
+      },
+      (err) => {
+        console.error(err);
+        state.error = `Firestore-Fehler: ${err.message} — prüft die Sicherheitsregeln der Datenbank "marketing".`;
+        state.loading = false;
+        render();
+      }
+    );
+  } catch (err) {
+    console.error("Firebase konnte nicht geladen werden:", err);
+    state.loading = false;
+    state.error = "Firebase/Firestore ist gerade nicht erreichbar (Netzwerk oder CDN blockiert). Die Oberfläche bleibt bedienbar — bitte Verbindung prüfen und Seite neu laden.";
+    render();
+  }
+}
+
+initFirebase();
+
+</script>
+</body>
+</html>

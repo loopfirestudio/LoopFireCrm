@@ -1,0 +1,2281 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loopfire · Marketing CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+:root {
+  --ink: #121319;
+  --ink-soft: #1A1C24;
+  --ink-surface: #20232D;
+  --ink-border: #2C303C;
+  --mist: #EDEBE6;
+  --mist-dim: #9A9CA8;
+  --mist-faint: #5F6270;
+  --violet: #8B7CFF;
+  --violet-soft: #6F5FE0;
+  --ember: #FFB454;
+  --coral: #FF6F61;
+  --mint: #5FE0B7;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--mist);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--violet); color: var(--ink); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-border); border-radius: 8px; }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+.hidden { display: none !important; }
+.mono { font-family: "JetBrains Mono", monospace; }
+.flex-1 { flex: 1; }
+
+/* Layout */
+.app { display: flex; height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--ink-border);
+  background: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.brand { padding: 24px 20px 20px; display: flex; align-items: center; gap: 10px; }
+.brand-name { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 15px; letter-spacing: -0.2px; margin: 0; line-height: 1; }
+.brand-sub { font-size: 10px; color: var(--mist-faint); letter-spacing: 0.5px; margin: 4px 0 0; }
+
+.nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 13.5px; font-weight: 500; color: var(--mist-dim);
+  font-family: inherit; transition: color .15s, background-color .15s;
+}
+.nav-item:hover { color: var(--mist); background: rgba(255,255,255,0.03); }
+.nav-item.active { background: var(--ink-surface); color: var(--mist); }
+.nav-item.active svg { color: var(--violet); stroke: var(--violet); }
+.nav-count { margin-left: auto; font-size: 11px; font-family: "JetBrains Mono", monospace; color: var(--mist-faint); }
+
+.sidebar-foot { padding: 16px 20px; border-top: 1px solid var(--ink-border); font-size: 11px; color: var(--mist-faint); line-height: 1.5; }
+.sidebar-foot .mono { color: var(--mist-dim); }
+
+.main { flex: 1; overflow-y: auto; }
+.view { padding: 32px; max-width: 1180px; animation: fadeUp .35s ease-out; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 22px; margin: 0; }
+.page-header p { font-size: 13px; color: var(--mist-dim); margin: 4px 0 0; }
+.page-header-row { display: flex; align-items: flex-start; justify-content: space-between; }
+
+.error-banner {
+  margin: 24px 32px 0; padding: 12px; border-radius: 8px;
+  background: rgba(255,111,97,0.1); border: 1px solid rgba(255,111,97,0.3);
+  color: var(--coral); font-size: 12.5px;
+}
+
+.empty-state { max-width: 420px; }
+.empty-state h1 { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 22px; margin: 0 0 8px; }
+.empty-state p { font-size: 13.5px; color: var(--mist-dim); line-height: 1.6; margin: 0; }
+
+/* Stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  padding: 16px; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stat-top span { font-size: 12px; color: var(--mist-dim); }
+.stat-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.stat-value { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 26px; margin: 0; line-height: 1; }
+.stat-sub { font-size: 11.5px; color: var(--mist-faint); margin: 8px 0 0; }
+
+/* Cards */
+.two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  padding: 20px; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+.card h2 { font-size: 13px; font-weight: 500; margin: 0 0 16px; }
+
+/* Pipeline funnel */
+.funnel-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.funnel-row:last-child { margin-bottom: 0; }
+.funnel-label { font-size: 12px; color: var(--mist-dim); width: 92px; flex-shrink: 0; }
+.funnel-track { flex: 1; height: 8px; border-radius: 999px; background: var(--ink-surface); overflow: hidden; }
+.funnel-bar { height: 100%; border-radius: 999px; transition: width .3s; }
+.funnel-count { font-size: 12px; font-family: "JetBrains Mono", monospace; width: 24px; text-align: right; flex-shrink: 0; }
+
+/* Platform chart */
+.platform-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.platform-row:last-child { margin-bottom: 0; }
+.platform-label { font-size: 12px; color: var(--mist-dim); width: 88px; flex-shrink: 0; text-align: right; }
+.platform-track { flex: 1; height: 14px; border-radius: 4px; background: var(--ink-surface); overflow: hidden; }
+.platform-bar { height: 100%; background: var(--violet); border-radius: 4px; transition: width .3s; }
+.platform-count { font-size: 12px; font-family: "JetBrains Mono", monospace; width: 20px; flex-shrink: 0; }
+.chart-empty { font-size: 12.5px; color: var(--mist-faint); padding: 8px 0; }
+
+/* Recent list */
+.recent-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--ink-border);
+  background: none; border-left: none; border-right: none; border-top: none;
+  width: 100%; cursor: pointer; text-align: left; font-family: inherit;
+  transition: opacity .15s;
+}
+.recent-row:last-child { border-bottom: none; }
+.recent-row:hover { opacity: 0.8; }
+.recent-left { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--ink-surface); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--mist-dim); flex-shrink: 0; }
+.recent-name { font-size: 13px; margin: 0; color: var(--mist); }
+.recent-sub { font-size: 11.5px; margin: 0; color: var(--mist-faint); }
+
+/* Badge */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 500; }
+.badge-dot { width: 6px; height: 6px; border-radius: 999px; }
+
+/* Toolbar */
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab-group { display: flex; background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 8px; padding: 2px; }
+.tab { padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 500; background: none; border: none; color: var(--mist-faint); cursor: pointer; font-family: inherit; transition: color .15s, background-color .15s; }
+.tab:hover { color: var(--mist-dim); }
+.tab.active { background: var(--ink-surface); color: var(--mist); }
+
+.select {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 8px;
+  padding: 7px 10px; font-size: 12.5px; color: var(--mist-dim); font-family: inherit; outline: none;
+}
+
+.search-box { position: relative; margin-left: auto; }
+.search-box svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--mist-faint); }
+.search-box input {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 8px;
+  padding: 7px 12px 7px 32px; font-size: 12.5px; color: var(--mist); width: 200px;
+  outline: none; font-family: inherit;
+}
+.search-box input::placeholder { color: var(--mist-faint); }
+.search-box input:focus { border-color: var(--violet); }
+
+/* Table */
+.table-card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  overflow: hidden; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+table { width: 100%; border-collapse: collapse; text-align: left; }
+thead tr { border-bottom: 1px solid var(--ink-border); }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--mist-faint); font-weight: 500; padding: 12px 16px; }
+td { padding: 12px 16px; border-bottom: 1px solid var(--ink-border); font-size: 12.5px; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { cursor: pointer; transition: background-color .15s; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+.row-name-cell { display: flex; align-items: center; gap: 10px; }
+.row-name { font-size: 13px; color: var(--mist); margin: 0; }
+.row-sub { font-size: 11px; color: var(--mist-faint); margin: 0; }
+.platform-cell { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mist-dim); }
+.priority-cell { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mist-dim); }
+.priority-dot { width: 6px; height: 6px; border-radius: 999px; }
+.empty-row td { text-align: center; padding: 40px 16px; color: var(--mist-faint); font-size: 13px; }
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--violet); color: var(--ink); font-weight: 500; font-size: 13px;
+  border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-family: inherit;
+  transition: background-color .15s;
+}
+.btn-primary:hover { background: var(--violet-soft); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--mist-faint); cursor: pointer;
+  padding: 8px; border-radius: 8px; transition: color .15s, background-color .15s;
+}
+.icon-btn:hover { color: var(--mist); background: rgba(255,255,255,0.03); }
+.icon-btn.danger:hover { color: var(--coral); background: rgba(255,111,97,0.1); }
+
+/* Drawer */
+.drawer-overlay { position: fixed; inset: 0; z-index: 50; display: flex; justify-content: flex-end; }
+.drawer-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+.drawer {
+  position: relative; width: 420px; max-width: 92vw; background: var(--ink-soft);
+  border-left: 1px solid var(--ink-border); height: 100%; overflow-y: auto;
+  animation: fadeUp .3s ease-out; box-shadow: -8px 0 24px rgba(0,0,0,0.4);
+  display: flex; flex-direction: column;
+}
+.drawer-head {
+  position: sticky; top: 0; background: var(--ink-soft); border-bottom: 1px solid var(--ink-border);
+  padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 2;
+}
+.drawer-head h2 { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 15px; margin: 0; }
+.drawer-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+.drawer-foot {
+  position: sticky; bottom: 0; background: var(--ink-soft); border-top: 1px solid var(--ink-border);
+  padding: 16px 20px; display: flex; align-items: center; gap: 8px;
+}
+
+.field label { display: block; font-size: 11.5px; font-weight: 500; color: var(--mist-faint); margin-bottom: 6px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+input, select, textarea {
+  width: 100%; background: var(--ink-surface); border: 1px solid var(--ink-border); border-radius: 8px;
+  padding: 8px 10px; font-size: 12.5px; color: var(--mist); outline: none; font-family: inherit;
+  transition: border-color .15s;
+}
+input::placeholder, textarea::placeholder { color: var(--mist-faint); }
+input:focus, select:focus, textarea:focus { border-color: var(--violet); }
+textarea { resize: none; }
+
+.input-with-icon { display: flex; align-items: center; gap: 6px; }
+.input-with-icon a { color: var(--mist-faint); flex-shrink: 0; transition: color .15s; }
+.input-with-icon a:hover { color: var(--violet); }
+
+.priority-group { display: flex; gap: 6px; }
+.priority-group button {
+  flex: 1; padding: 7px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  background: transparent; border: 1px solid var(--ink-border); color: var(--mist-faint);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.priority-group button.active { border-color: var(--violet); color: var(--violet); background: rgba(139,124,255,0.1); }
+
+/* Content-Typ Chips (Mehrfachauswahl) */
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-group button {
+  padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  background: transparent; border: 1px solid var(--ink-border); color: var(--mist-faint);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.chip-group button.active { border-color: var(--mint); color: var(--mint); background: rgba(95,224,183,0.1); }
+
+/* Content-Typ Badges in Tabelle */
+.content-type-cell { display: flex; flex-wrap: wrap; gap: 4px; max-width: 170px; }
+.content-type-tag {
+  font-size: 10.5px; font-weight: 500; padding: 2px 7px; border-radius: 999px;
+  background: rgba(95,224,183,0.12); color: var(--mint); white-space: nowrap;
+}
+.content-type-more { font-size: 10.5px; color: var(--mist-faint); padding: 2px 4px; }
+.content-type-empty { font-size: 12px; color: var(--mist-faint); }
+
+/* Template grid */
+.template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.template-card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem;
+  padding: 16px; box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+  cursor: pointer; display: flex; flex-direction: column; gap: 10px; transition: border-color .15s;
+}
+.template-card:hover { border-color: #3a3f4d; }
+.template-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.template-title { font-size: 13.5px; font-weight: 500; color: var(--mist); margin: 0; line-height: 1.3; }
+.template-preview {
+  font-size: 12px; color: var(--mist-dim); line-height: 1.5; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  white-space: pre-wrap; flex: 1;
+}
+.template-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
+.template-copy-btn {
+  display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500;
+  color: var(--mist-faint); background: none; border: 1px solid var(--ink-border); border-radius: 6px;
+  padding: 5px 9px; cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.template-copy-btn:hover { color: var(--mist); border-color: #3a3f4d; }
+.template-copy-btn.copied { color: var(--mint); border-color: var(--mint); }
+.template-grid-empty { grid-column: 1 / -1; padding: 40px 0; text-align: center; color: var(--mist-faint); font-size: 13px; }
+
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--mist-dim); cursor: pointer; }
+.checkbox-row input { width: auto; accent-color: var(--violet); }
+
+.decline-btn { margin-top: 10px; background: none; border: none; font-size: 11.5px; font-weight: 500; color: var(--mist-faint); cursor: pointer; font-family: inherit; padding: 0; }
+.decline-btn:hover { color: var(--coral); }
+.decline-btn.active { color: var(--coral); }
+
+/* Pipeline stepper (drawer) */
+.stepper-track { display: flex; align-items: center; }
+.stepper-node {
+  width: 24px; height: 24px; border-radius: 999px; border: 2px solid var(--ink-border);
+  background: transparent; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .15s; padding: 0;
+}
+.stepper-node-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--ink); }
+.stepper-connector { height: 2px; flex: 1; margin: 0 4px; background: var(--ink-border); border-radius: 2px; transition: background-color .15s; }
+.stepper-connector:last-child { display: none; }
+.stepper-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+.stepper-labels span { font-size: 10px; font-family: "JetBrains Mono", monospace; color: var(--mist-faint); width: 24px; text-align: center; margin-left: -12px; }
+.stepper-labels span:first-child { margin-left: 0; }
+
+@media (max-width: 800px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .sidebar { width: 180px; }
+}
+
+/* ─── Sidebar Gruppen ─── */
+.nav-group-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--mist-faint);
+  margin: 16px 12px 6px; font-weight: 500;
+}
+.nav-group-label:first-child { margin-top: 4px; }
+
+/* ─── Loading / Hints ─── */
+.p-loading { padding: 32px 0; color: var(--mist-faint); font-size: 13px; }
+.hint-text { font-size: 12px; color: var(--mist-faint); margin-top: 14px; line-height: 1.5; }
+
+/* ─── Checkliste (Heute) ─── */
+.checklist-section { margin-bottom: 24px; }
+.checklist-section h2 { font-size: 13px; font-weight: 500; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.checklist-count {
+  font-size: 10.5px; font-family: "JetBrains Mono", monospace; color: var(--mist-faint);
+  background: var(--ink-surface); border-radius: 999px; padding: 1px 7px;
+}
+.checklist { display: flex; flex-direction: column; gap: 2px; }
+.checklist-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;
+  background: var(--ink-soft); border: 1px solid var(--ink-border); transition: border-color .15s;
+}
+.checklist-item:hover { border-color: #3a3f4d; }
+.checklist-check {
+  width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--ink-border); background: transparent;
+  cursor: pointer; flex-shrink: 0; transition: all .15s;
+}
+.checklist-check:hover { border-color: var(--mint); }
+.checklist-body { flex: 1; cursor: pointer; }
+.checklist-label { font-size: 13px; color: var(--mist); margin: 0; }
+.checklist-sub { font-size: 11.5px; color: var(--mist-faint); margin: 2px 0 0; }
+
+/* ─── Kanban (Aufgaben) ─── */
+.kanban-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+.kanban-col { background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem; padding: 14px; }
+.kanban-col-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; color: var(--mist-dim); margin-bottom: 12px; }
+.kanban-col-body { display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+.kanban-card {
+  background: var(--ink-surface); border: 1px solid var(--ink-border); border-radius: 10px; padding: 12px;
+  cursor: pointer; transition: border-color .15s;
+}
+.kanban-card:hover { border-color: #3a3f4d; }
+.kanban-card-head { display: flex; align-items: flex-start; gap: 8px; }
+.kanban-card-title { font-size: 12.5px; color: var(--mist); margin: 0; line-height: 1.4; }
+.kanban-card-desc { font-size: 11.5px; color: var(--mist-faint); margin: 6px 0 0; line-height: 1.4; }
+.kanban-card-foot { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.kanban-tag {
+  font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: var(--ink-border);
+  color: var(--mist-dim); white-space: nowrap;
+}
+.kanban-tag.overdue { background: rgba(255,111,97,0.15); color: var(--coral); }
+
+/* ─── Kampagnen ─── */
+.campaign-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.campaign-card {
+  background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem; padding: 18px;
+  cursor: pointer; transition: border-color .15s;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35);
+}
+.campaign-card:hover { border-color: #3a3f4d; }
+.campaign-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.campaign-title { font-size: 14.5px; font-weight: 500; color: var(--mist); margin: 0; }
+.campaign-game { font-size: 11.5px; color: var(--mist-faint); margin: 2px 0 0; }
+.campaign-dates { font-size: 11.5px; color: var(--mist-faint); margin: 0 0 14px; }
+.campaign-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+.campaign-stat { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.campaign-stat-value { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 16px; color: var(--mist); }
+.campaign-stat-label { font-size: 9.5px; color: var(--mist-faint); margin-top: 2px; line-height: 1.2; }
+.progress-bar { height: 6px; border-radius: 999px; background: var(--ink-surface); overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--violet); border-radius: 999px; transition: width .3s; }
+
+/* ─── Content-Planer (Wochenkalender) ─── */
+.week-nav { display: flex; align-items: center; gap: 8px; }
+.week-range { font-size: 12.5px; color: var(--mist-dim); min-width: 90px; text-align: center; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+.calendar-day { background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 12px; padding: 10px; min-height: 220px; display: flex; flex-direction: column; }
+.calendar-day.is-today { border-color: var(--violet); }
+.calendar-day-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--mist-dim); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--ink-border); }
+.calendar-day-body { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.calendar-item {
+  background: var(--ink-surface); border-left: 3px solid var(--violet); border-radius: 6px; padding: 6px 8px;
+  font-size: 11.5px; color: var(--mist); cursor: pointer; line-height: 1.3;
+}
+.calendar-item-sub { display: block; font-size: 10px; color: var(--mist-faint); margin-top: 2px; }
+.calendar-add {
+  margin-top: auto; background: none; border: 1px dashed var(--ink-border); border-radius: 6px;
+  color: var(--mist-faint); font-size: 11px; padding: 6px; cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.calendar-add:hover { color: var(--mist-dim); border-color: #3a3f4d; }
+
+/* ─── Asset-Bibliothek ─── */
+.asset-group { background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem; padding: 16px 18px; margin-bottom: 14px; }
+.asset-group-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.asset-group-head h2 { font-size: 13px; font-weight: 500; margin: 0; }
+.asset-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 0;
+  border-bottom: 1px solid var(--ink-border); cursor: pointer; font-size: 12.5px; color: var(--mist);
+}
+.asset-item:last-child { border-bottom: none; }
+.asset-item-name { color: var(--mist); }
+.asset-item-link { color: var(--violet); font-size: 11.5px; text-decoration: none; }
+.asset-item-link:hover { text-decoration: underline; }
+
+/* ─── Tag-Input (Kontakt-Tags) ─── */
+.tag-input-wrap { display: flex; flex-direction: column; gap: 8px; }
+.tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500;
+  padding: 3px 6px 3px 10px; border-radius: 999px; background: rgba(139,124,255,0.12); color: var(--violet);
+}
+.tag-chip button { background: none; border: none; color: inherit; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; }
+
+/* ─── Views-Grid (Kontakt: Views nach Content-Art) ─── */
+.views-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.views-grid-label { display: block; font-size: 10px; color: var(--mist-faint); margin-bottom: 4px; }
+
+/* ─── Reminder Badge (Kontakte-Tabelle) ─── */
+.reminder-badge { font-size: 11.5px; color: var(--mist-dim); }
+.reminder-badge.due { color: var(--coral); font-weight: 500; }
+
+/* ─── Dashboard: Perioden-Tabs ─── */
+.period-tabs { display: flex; gap: 4px; margin-top: 4px; }
+.period-tabs button {
+  flex: 1; padding: 4px 6px; border-radius: 6px; font-size: 10.5px; font-weight: 500;
+  background: transparent; border: 1px solid var(--ink-border); color: var(--mist-faint);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.period-tabs button.active { border-color: var(--violet); color: var(--violet); background: rgba(139,124,255,0.1); }
+.top-performer-total { color: var(--mist-dim); font-size: 12px; }
+
+/* ─── Timeline ─── */
+.timeline-day-group { margin-bottom: 22px; }
+.timeline-day-group h2 { font-size: 12.5px; font-weight: 500; color: var(--mist-dim); margin: 0 0 10px; text-transform: capitalize; }
+.timeline-list { background: var(--ink-soft); border: 1px solid var(--ink-border); border-radius: 1.1rem; padding: 6px 16px; }
+.timeline-row { display: flex; align-items: baseline; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--ink-border); }
+.timeline-row:last-child { border-bottom: none; }
+.timeline-row p { margin: 0; font-size: 12.5px; color: var(--mist); }
+.timeline-time { font-size: 11.5px; color: var(--mist-faint); width: 42px; flex-shrink: 0; }
+
+/* ─── Wochenreport ─── */
+.report-grid { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 1000px) {
+  .kanban-board { grid-template-columns: 1fr; }
+  .calendar-grid { grid-template-columns: repeat(7, minmax(120px, 1fr)); overflow-x: auto; }
+  .report-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+</style>
+</head>
+<body>
+  <datalist id="games-datalist"></datalist>
+
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <path
+            d="M13 2C9 7 6 10.5 6 15a7 7 0 0 0 14 0c0-2.4-1-4.3-2.4-6 .3 2-.4 3.4-1.6 4-0.2-2.6-1.4-4.8-3-6.6C12 8 11.3 9.6 11.3 11c0-3.2 1-6.4 1.7-9Z"
+            fill="url(#g)"
+          />
+          <defs>
+            <linearGradient id="g" x1="6" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#8B7CFF" />
+              <stop offset="1" stop-color="#FFB454" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <p class="brand-name">Loopfire</p>
+          <p class="brand-sub">MARKETING CRM</p>
+        </div>
+      </div>
+
+      <nav class="nav" id="main-nav">
+        <p class="nav-group-label">Übersicht</p>
+        <button class="nav-item active" data-view="today">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Heute
+        </button>
+        <button class="nav-item" data-view="dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Dashboard
+        </button>
+        <button class="nav-item" data-view="timeline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+          Timeline
+        </button>
+        <button class="nav-item" data-view="report">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>
+          Wochenreport
+        </button>
+
+        <p class="nav-group-label">Kontakte &amp; Aufgaben</p>
+        <button class="nav-item" data-view="contacts">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Kontakte
+          <span class="nav-count" id="nav-count-contacts"></span>
+        </button>
+        <button class="nav-item" data-view="tasks">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 7 2 2 4-4"/><path d="m3 15 2 2 4-4"/><path d="M11 6h10M11 16h10"/></svg>
+          Aufgaben
+          <span class="nav-count" id="nav-count-tasks"></span>
+        </button>
+        <button class="nav-item" data-view="campaigns">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg>
+          Kampagnen
+          <span class="nav-count" id="nav-count-campaigns"></span>
+        </button>
+
+        <p class="nav-group-label">Planung</p>
+        <button class="nav-item" data-view="planner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Content-Planer
+        </button>
+        <button class="nav-item" data-view="posts">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 15 5-5 4 4 5-5 4 4"/></svg>
+          Post-Bibliothek
+          <span class="nav-count" id="nav-count-posts"></span>
+        </button>
+
+        <p class="nav-group-label">Bibliothek</p>
+        <button class="nav-item" data-view="assets">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          Asset-Bibliothek
+        </button>
+        <button class="nav-item" data-view="templates">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 13h6M9 17h6M9 9h1"/></svg>
+          Textbausteine
+          <span class="nav-count" id="nav-count-templates"></span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        Firestore · Collection <span class="mono">Marketing</span>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div id="error-banner" class="error-banner hidden"></div>
+
+      <section id="view-today" class="view"><div id="today-container"></div></section>
+      <section id="view-dashboard" class="view hidden"><div id="dashboard-container"></div></section>
+      <section id="view-timeline" class="view hidden"><div id="timeline-container"></div></section>
+      <section id="view-report" class="view hidden"><div id="report-container"></div></section>
+
+      <!-- Contacts view -->
+      <section id="view-contacts" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Kontakte</h1>
+            <p>Content Creator &amp; Presse — Bearbeitungsstand auf einen Blick.</p>
+          </div>
+          <button class="btn-primary" id="btn-new-contact">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Neuer Kontakt
+          </button>
+        </header>
+
+        <div class="toolbar">
+          <div class="tab-group" id="type-filter">
+            <button class="tab active" data-type="all">Alle</button>
+            <button class="tab" data-type="creator">Creator</button>
+            <button class="tab" data-type="press">Presse</button>
+          </div>
+          <select id="status-filter" class="select"></select>
+          <select id="content-type-filter" class="select"></select>
+          <select id="game-filter" class="select"></select>
+          <select id="tag-filter" class="select"></select>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="search-input" type="text" placeholder="Name suchen…" />
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Plattform</th>
+                <th>Spiel</th>
+                <th>Content-Typ</th>
+                <th>Reichweite</th>
+                <th>Status</th>
+                <th>Reminder</th>
+                <th>Letzter Kontakt</th>
+              </tr>
+            </thead>
+            <tbody id="contacts-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Tasks view -->
+      <section id="view-tasks" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Aufgaben</h1>
+            <p>Marketing-Aufgaben — verknüpft mit Kontakten und Spielen.</p>
+          </div>
+          <button class="btn-primary" id="btn-new-task">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Neue Aufgabe
+          </button>
+        </header>
+        <div class="toolbar">
+          <select id="task-game-filter" class="select"></select>
+        </div>
+        <div id="tasks-container"></div>
+      </section>
+
+      <!-- Campaigns view -->
+      <section id="view-campaigns" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Kampagnen</h1>
+            <p>Marketing-Kampagnen auf Basis eurer Kontaktdaten.</p>
+          </div>
+          <button class="btn-primary" id="btn-new-campaign">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Neue Kampagne
+          </button>
+        </header>
+        <div id="campaigns-container" class="campaign-grid"></div>
+      </section>
+
+      <!-- Planner view -->
+      <section id="view-planner" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Content-Planer</h1>
+            <p>Geplante Posts in der Wochenübersicht.</p>
+          </div>
+          <div class="week-nav">
+            <button class="icon-btn" id="planner-prev">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span id="planner-range" class="week-range mono"></span>
+            <button class="icon-btn" id="planner-next">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </header>
+        <div id="planner-container" class="calendar-grid"></div>
+      </section>
+
+      <!-- Posts view -->
+      <section id="view-posts" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Post-Bibliothek</h1>
+            <p>Alle Social- &amp; Community-Posts an einem Ort.</p>
+          </div>
+          <button class="btn-primary" id="btn-new-post">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Neuer Post
+          </button>
+        </header>
+        <div class="toolbar">
+          <div class="tab-group" id="post-status-filter">
+            <button class="tab active" data-status="all">Alle</button>
+          </div>
+          <select id="post-platform-filter" class="select"></select>
+        </div>
+        <div id="posts-container" class="template-grid"></div>
+      </section>
+
+      <!-- Assets view -->
+      <section id="view-assets" class="view hidden">
+        <header class="page-header">
+          <h1>Asset-Bibliothek</h1>
+          <p>Links zu Screenshots, Trailern, Key Art &amp; Co. (z. B. Drive-Ordner).</p>
+        </header>
+        <div id="assets-container"></div>
+      </section>
+
+      <!-- Templates view -->
+      <section id="view-templates" class="view hidden">
+        <header class="page-header page-header-row">
+          <div>
+            <h1>Textbausteine</h1>
+            <p>Wiederverwendbare Vorlagen für den gesamten Outreach-Prozess.</p>
+          </div>
+          <button class="btn-primary" id="btn-new-template">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Neuer Textbaustein
+          </button>
+        </header>
+        <div class="toolbar">
+          <div class="tab-group" id="template-category-filter"></div>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="template-search-input" type="text" placeholder="Titel suchen…" />
+          </div>
+        </div>
+        <div id="template-grid" class="template-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Generic Drawer -->
+  <div id="drawer-overlay" class="drawer-overlay hidden">
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <div class="drawer">
+      <div class="drawer-head">
+        <h2 id="drawer-title">—</h2>
+        <button class="icon-btn" id="drawer-close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="drawer-body" id="drawer-body"></div>
+      <div class="drawer-foot">
+        <button class="icon-btn danger hidden" id="drawer-delete">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z"/></svg>
+        </button>
+        <button class="btn-primary flex-1" id="drawer-save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+// ─────────────────────────────────────────────────────────────────────────
+// Loopfire Marketing CRM
+// Firestore: DEFAULT-Datenbank, alle Daten in EINER Collection "Marketing",
+// unterschieden über das Feld `_type`. Firebase wird bewusst NACH der UI
+// und via try/catch geladen, damit ein Netzwerkproblem nicht die ganze
+// Seite lahmlegt (Buttons funktionieren immer, auch offline).
+// ─────────────────────────────────────────────────────────────────────────
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAy16r_mgPt39-O5ol2CWShH-Zl_v13OoU",
+  authDomain: "loopfire-studio.firebaseapp.com",
+  databaseURL: "https://loopfire-studio-default-rtdb.firebaseio.com",
+  projectId: "loopfire-studio",
+  storageBucket: "loopfire-studio.firebasestorage.app",
+  messagingSenderId: "671968406115",
+  appId: "1:671968406115:web:d5250c8fb2d43034b26656",
+};
+
+const MARKETING = "Marketing"; // einzige Collection, unterschieden per `_type`
+let db = null; // gesetzt sobald Firebase geladen ist
+let fs = null; // hält { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Konstanten / Optionen
+// ─────────────────────────────────────────────────────────────────────────
+const CONTACT_TYPES = [
+  { id: "creator", label: "Content Creator" },
+  { id: "press", label: "Presse / Media" },
+];
+
+const PIPELINE = [
+  { id: "new", label: "Neu", color: "#5F6270" },
+  { id: "contacted", label: "Kontaktiert", color: "#8B7CFF" },
+  { id: "negotiating", label: "Verhandlung", color: "#FFB454" },
+  { id: "key_sent", label: "Key gesendet", color: "#5FE0B7" },
+  { id: "posted", label: "Veröffentlicht", color: "#5FE0B7" },
+  { id: "declined", label: "Abgelehnt", color: "#FF6F61" },
+];
+const FLOW = PIPELINE.filter((s) => s.id !== "declined");
+const statusById = (id) => PIPELINE.find((s) => s.id === id) || PIPELINE[0];
+
+const PLATFORMS = [
+  { id: "youtube", label: "YouTube" },
+  { id: "twitch", label: "Twitch" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "instagram", label: "Instagram" },
+  { id: "x", label: "X / Twitter" },
+  { id: "press", label: "Presse-Outlet" },
+  { id: "other", label: "Sonstiges" },
+];
+const platformById = (id) => PLATFORMS.find((p) => p.id === id) || PLATFORMS[PLATFORMS.length - 1];
+
+const PRIORITIES = [
+  { id: "low", label: "Niedrig", color: "#5F6270" },
+  { id: "medium", label: "Mittel", color: "#FFB454" },
+  { id: "high", label: "Hoch", color: "#FF6F61" },
+];
+const priorityById = (id) => PRIORITIES.find((p) => p.id === id) || PRIORITIES[0];
+
+const CONTENT_TYPES = [
+  { id: "beta_tester", label: "Beta-Tester" },
+  { id: "demo_tester", label: "Demo-Tester" },
+  { id: "reviewer", label: "Spiele-Reviewer" },
+  { id: "trailer", label: "Trailer-Publisher" },
+  { id: "letsplay", label: "Let's Player" },
+  { id: "streamer", label: "Streamer" },
+  { id: "guide", label: "Guide / Tutorial" },
+  { id: "article", label: "Presse-Artikel" },
+  { id: "other", label: "Sonstiges" },
+];
+const contentTypeById = (id) => CONTENT_TYPES.find((c) => c.id === id) || { id, label: id };
+
+// Content-Arten für die getrennte View-Erfassung (statt einem einzelnen "views"-Feld)
+const VIEW_TYPES = [
+  { id: "video", label: "Video" },
+  { id: "livestream", label: "Livestream" },
+  { id: "short", label: "Short" },
+  { id: "review", label: "Review" },
+  { id: "article", label: "Artikel" },
+];
+
+const TEMPLATE_CATEGORIES = [
+  { id: "initial_outreach", label: "Initial Outreach", color: "#8B7CFF" },
+  { id: "review_key", label: "Review Key", color: "#5FE0B7" },
+  { id: "reminder", label: "Reminder", color: "#FFB454" },
+  { id: "thanks", label: "Thanks", color: "#5FE0B7" },
+  { id: "launch", label: "Launch", color: "#FF6F61" },
+  { id: "demo", label: "Demo", color: "#8B7CFF" },
+  { id: "other", label: "Sonstiges", color: "#5F6270" },
+];
+const templateCategoryById = (id) => TEMPLATE_CATEGORIES.find((c) => c.id === id) || TEMPLATE_CATEGORIES[TEMPLATE_CATEGORIES.length - 1];
+
+const TASK_STATUSES = [
+  { id: "open", label: "Offen", color: "#5F6270" },
+  { id: "in_progress", label: "In Arbeit", color: "#FFB454" },
+  { id: "done", label: "Erledigt", color: "#5FE0B7" },
+];
+const taskStatusById = (id) => TASK_STATUSES.find((s) => s.id === id) || TASK_STATUSES[0];
+
+const CAMPAIGN_STATUSES = [
+  { id: "planned", label: "Geplant", color: "#5F6270" },
+  { id: "running", label: "Running", color: "#8B7CFF" },
+  { id: "paused", label: "Pausiert", color: "#FFB454" },
+  { id: "done", label: "Abgeschlossen", color: "#5FE0B7" },
+];
+const campaignStatusById = (id) => CAMPAIGN_STATUSES.find((s) => s.id === id) || CAMPAIGN_STATUSES[0];
+
+const POST_PLATFORMS = [
+  { id: "steam", label: "Steam" },
+  { id: "twitter", label: "Twitter / X" },
+  { id: "discord", label: "Discord" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "reddit", label: "Reddit" },
+  { id: "other", label: "Sonstiges" },
+];
+const postPlatformById = (id) => POST_PLATFORMS.find((p) => p.id === id) || POST_PLATFORMS[POST_PLATFORMS.length - 1];
+
+const POST_STATUSES = [
+  { id: "draft", label: "Draft", color: "#5F6270" },
+  { id: "review", label: "Review", color: "#FFB454" },
+  { id: "ready", label: "Ready", color: "#8B7CFF" },
+  { id: "published", label: "Published", color: "#5FE0B7" },
+];
+const postStatusById = (id) => POST_STATUSES.find((s) => s.id === id) || POST_STATUSES[0];
+
+const ASSET_CATEGORIES = [
+  { id: "screenshot", label: "Screenshots" },
+  { id: "gif", label: "GIFs" },
+  { id: "trailer", label: "Trailer" },
+  { id: "icon", label: "Icons" },
+  { id: "keyart", label: "Key Art" },
+  { id: "logo", label: "Logo" },
+  { id: "presskit", label: "Press Kit" },
+];
+const assetCategoryById = (id) => ASSET_CATEGORIES.find((c) => c.id === id) || ASSET_CATEGORIES[0];
+
+// Leere Formulare je Entitätstyp
+const EMPTY_FORMS = {
+  contact: {
+    name: "", type: "creator", platform: "youtube", contentTypes: [], game: "", tags: [],
+    profileUrl: "", email: "", followers: "", priority: "medium", status: "new", keySent: false,
+    contentUrl: "", viewsByType: { video: "", livestream: "", short: "", review: "", article: "" },
+    fitReason: "", lastContactAt: "", lastReplyAt: "", reminderAt: "", reminderNote: "",
+    campaignId: "", notes: "",
+  },
+  template: { title: "", category: "initial_outreach", content: "" },
+  task: { title: "", description: "", priority: "medium", deadline: "", status: "open", assignee: "", contactId: "", game: "" },
+  campaign: { name: "", game: "", status: "planned", startDate: "", endDate: "", plannedCreators: "", notes: "" },
+  post: { title: "", platform: "twitter", content: "", status: "draft", scheduledDate: "", campaignId: "", game: "", publishedUrl: "", views: "" },
+  asset: { name: "", category: "screenshot", url: "", notes: "" },
+};
+
+const DRAWER_TITLES = {
+  contact: { new: "Neuer Kontakt", edit: "Kontakt bearbeiten", create: "Kontakt anlegen", save: "Änderungen speichern" },
+  template: { new: "Neuer Textbaustein", edit: "Textbaustein bearbeiten", create: "Textbaustein anlegen", save: "Änderungen speichern" },
+  task: { new: "Neue Aufgabe", edit: "Aufgabe bearbeiten", create: "Aufgabe anlegen", save: "Änderungen speichern" },
+  campaign: { new: "Neue Kampagne", edit: "Kampagne bearbeiten", create: "Kampagne anlegen", save: "Änderungen speichern" },
+  post: { new: "Neuer Post", edit: "Post bearbeiten", create: "Post anlegen", save: "Änderungen speichern" },
+  asset: { new: "Neues Asset", edit: "Asset bearbeiten", create: "Asset anlegen", save: "Änderungen speichern" },
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────
+const state = {
+  all: [], // roher Snapshot der gesamten "Marketing"-Collection
+  loading: true,
+  error: null,
+  view: "today",
+
+  // derived (aus state.all berechnet, siehe recomputeDerived)
+  contacts: [], templates: [], tasks: [], campaigns: [], posts: [], assets: [], timeline: [],
+  games: [], tags: [],
+
+  // Filter/UI-State pro View
+  typeFilter: "all", statusFilter: "all", contentTypeFilter: "all", gameFilter: "all", tagFilter: "all", search: "",
+  taskGameFilter: "all",
+  templateCategoryFilter: "all", templateSearch: "",
+  postStatusFilter: "all", postPlatformFilter: "all",
+  plannerWeekStart: startOfWeek(new Date()),
+  dashboardContactedPeriod: "week",
+
+  // Generischer Editor/Drawer
+  editing: null, // { kind, id, form, originalStatus }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────
+const el = (id) => document.getElementById(id);
+const esc = (s) => (s ?? "").toString().replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function formatCompact(n) {
+  n = Number(n) || 0;
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+function startOfWeek(date) {
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7; // Montag = 0
+  d.setDate(d.getDate() - day);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+function toDateStr(date) { return date.toISOString().slice(0, 10); }
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  const [y, m, d] = dateStr.split("-");
+  return `${d}.${m}.${y}`;
+}
+function formatShortDate(date) {
+  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+}
+function tsToMillis(ts) { return ts?.seconds ? ts.seconds * 1000 : 0; }
+function formatTimeFromTs(ts) {
+  if (!ts?.seconds) return "";
+  return new Date(ts.seconds * 1000).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+}
+function formatDayFromTs(ts) {
+  if (!ts?.seconds) return "";
+  return new Date(ts.seconds * 1000).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" });
+}
+function isSameDay(ts, dateObj) {
+  if (!ts?.seconds) return false;
+  const d = new Date(ts.seconds * 1000);
+  return d.toDateString() === dateObj.toDateString();
+}
+
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+function setField(form, path, value) {
+  const parts = path.split(".");
+  let obj = form;
+  for (let i = 0; i < parts.length - 1; i++) {
+    obj[parts[i]] = obj[parts[i]] || {};
+    obj = obj[parts[i]];
+  }
+  obj[parts[parts.length - 1]] = value;
+}
+function getField(form, path) {
+  return path.split(".").reduce((o, k) => (o == null ? o : o[k]), form);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Ableitung: aus dem rohen Snapshot state.all die einzelnen Listen bauen
+// ─────────────────────────────────────────────────────────────────────────
+function recomputeDerived() {
+  const all = state.all;
+  state.contacts = all.filter((d) => d._type === "contact").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+  state.templates = all.filter((d) => d._type === "template").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+  state.tasks = all.filter((d) => d._type === "task").sort((a, b) => (a.deadline || "9999").localeCompare(b.deadline || "9999"));
+  state.campaigns = all.filter((d) => d._type === "campaign").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+  state.posts = all.filter((d) => d._type === "post").sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
+  state.assets = all.filter((d) => d._type === "asset").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+  state.timeline = all.filter((d) => d._type === "timelineEvent").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+
+  const gameSet = new Set();
+  [...state.contacts, ...state.campaigns, ...state.tasks, ...state.posts].forEach((d) => { if (d.game) gameSet.add(d.game); });
+  state.games = [...gameSet].sort();
+
+  const tagSet = new Set();
+  state.contacts.forEach((c) => (c.tags || []).forEach((t) => tagSet.add(t)));
+  state.tags = [...tagSet].sort();
+
+  refreshDynamicFilterOptions();
+}
+
+function contactById(id) { return state.contacts.find((c) => c.id === id); }
+function campaignById(id) { return state.campaigns.find((c) => c.id === id); }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Firestore: generisches Speichern / Löschen / Timeline-Logging
+// ─────────────────────────────────────────────────────────────────────────
+async function logTimeline(label, refs = {}) {
+  if (!db) return;
+  try {
+    await fs.addDoc(fs.collection(db, MARKETING), {
+      _type: "timelineEvent",
+      label,
+      ...refs,
+      createdAt: fs.serverTimestamp(),
+      updatedAt: fs.serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("Timeline-Log fehlgeschlagen:", err);
+  }
+}
+
+function coerceNumbers(kind, payload) {
+  if (kind === "contact") {
+    payload.followers = Number(payload.followers) || 0;
+    const vbt = payload.viewsByType || {};
+    payload.viewsByType = Object.fromEntries(VIEW_TYPES.map((t) => [t.id, Number(vbt[t.id]) || 0]));
+  }
+  if (kind === "task") {
+    // keine numerischen Pflichtfelder
+  }
+  if (kind === "campaign") {
+    payload.plannedCreators = Number(payload.plannedCreators) || 0;
+  }
+  if (kind === "post") {
+    payload.views = Number(payload.views) || 0;
+  }
+  return payload;
+}
+
+async function saveEditing() {
+  const editing = state.editing;
+  if (!editing) return;
+  const { kind, id, form } = editing;
+  const nameField = { contact: "name", template: "title", task: "title", campaign: "name", post: "title", asset: "name" }[kind];
+  if (!form[nameField] || !form[nameField].trim()) return;
+
+  if (!db) {
+    state.error = "Noch keine Verbindung zu Firestore — bitte kurz warten oder Seite neu laden.";
+    render();
+    return;
+  }
+
+  const payload = coerceNumbers(kind, { ...form, _type: kind, updatedAt: fs.serverTimestamp() });
+
+  try {
+    if (id) {
+      await fs.updateDoc(fs.doc(db, MARKETING, id), payload);
+    } else {
+      payload.createdAt = fs.serverTimestamp();
+      await fs.addDoc(fs.collection(db, MARKETING), payload);
+    }
+
+    // Automatisches Timeline-Logging bei relevanten Statuswechseln
+    if (kind === "contact" && editing.originalStatus !== form.status) {
+      await logTimeline(`${form.name}: Status → ${statusById(form.status).label}`, { contactId: id || null });
+    }
+    if (kind === "task" && editing.originalStatus !== form.status && form.status === "done") {
+      await logTimeline(`Aufgabe erledigt: ${form.title}`, { taskId: id || null });
+    }
+    if (kind === "campaign" && editing.originalStatus !== form.status) {
+      await logTimeline(`Kampagne „${form.name}“: Status → ${campaignStatusById(form.status).label}`, { campaignId: id || null });
+    }
+    if (kind === "post" && editing.originalStatus !== form.status && form.status === "published") {
+      await logTimeline(`Post veröffentlicht: ${form.title}`, { postId: id || null });
+    }
+
+    closeEditor();
+  } catch (err) {
+    console.error(err);
+    state.error = `Speichern fehlgeschlagen: ${err.message}`;
+    render();
+  }
+}
+
+async function deleteEditing() {
+  const editing = state.editing;
+  if (!editing?.id) return;
+  if (!db) {
+    state.error = "Noch keine Verbindung zu Firestore — bitte kurz warten oder Seite neu laden.";
+    render();
+    return;
+  }
+  try {
+    await fs.deleteDoc(fs.doc(db, MARKETING, editing.id));
+    closeEditor();
+  } catch (err) {
+    console.error(err);
+    state.error = `Löschen fehlgeschlagen: ${err.message}`;
+    render();
+  }
+}
+
+// Schnelle Statusänderung ohne den Drawer zu öffnen (z. B. "Heute"-Checkliste)
+async function quickUpdate(id, patch, timelineLabel, refs) {
+  if (!db) {
+    state.error = "Noch keine Verbindung zu Firestore — bitte kurz warten oder Seite neu laden.";
+    render();
+    return;
+  }
+  try {
+    await fs.updateDoc(fs.doc(db, MARKETING, id), { ...patch, updatedAt: fs.serverTimestamp() });
+    if (timelineLabel) await logTimeline(timelineLabel, refs || {});
+  } catch (err) {
+    console.error(err);
+    state.error = `Aktion fehlgeschlagen: ${err.message}`;
+    render();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Firebase laden (dynamischer Import, Default-Datenbank)
+// ─────────────────────────────────────────────────────────────────────────
+async function initFirebase() {
+  try {
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app); // Default-Datenbank (kein zweiter Parameter)
+
+    const q = fs.collection(db, MARKETING);
+    fs.onSnapshot(
+      q,
+      (snap) => {
+        state.all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        recomputeDerived();
+        state.loading = false;
+        state.error = null;
+        render();
+      },
+      (err) => {
+        console.error(err);
+        state.error = err.message;
+        state.loading = false;
+        render();
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    state.error = "Firebase konnte nicht geladen werden: " + err.message;
+    state.loading = false;
+    render();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Kleine wiederverwendbare UI-Bausteine (HTML-String-Generatoren)
+// ─────────────────────────────────────────────────────────────────────────
+function badgeHtml(label, color) {
+  return `<span class="badge" style="background:${color}1A;color:${color}"><span class="badge-dot" style="background:${color}"></span>${esc(label)}</span>`;
+}
+function statusBadgeHtml(status) { const s = statusById(status); return badgeHtml(s.label, s.color); }
+function taskStatusBadgeHtml(status) { const s = taskStatusById(status); return badgeHtml(s.label, s.color); }
+function campaignStatusBadgeHtml(status) { const s = campaignStatusById(status); return badgeHtml(s.label, s.color); }
+function postStatusBadgeHtml(status) { const s = postStatusById(status); return badgeHtml(s.label, s.color); }
+function priorityDotHtml(priority) {
+  const p = priorityById(priority);
+  return `<span class="priority-cell"><span class="priority-dot" style="background:${p.color}"></span>${p.label}</span>`;
+}
+function avatarHtml(name) { return `<div class="avatar">${esc(name?.[0]?.toUpperCase() || "?")}</div>`; }
+
+function fieldWrap(label, innerHtml, extraClass = "") {
+  return `<div class="field ${extraClass}"><label>${esc(label)}</label>${innerHtml}</div>`;
+}
+function textInput(field, placeholder, value, type = "text", extraClass = "") {
+  return `<input data-field="${field}" type="${type}" value="${esc(value ?? "")}" placeholder="${esc(placeholder || "")}" class="${extraClass}" />`;
+}
+function textareaInput(field, placeholder, value, rows = 4) {
+  return `<textarea data-field="${field}" placeholder="${esc(placeholder || "")}" rows="${rows}">${esc(value ?? "")}</textarea>`;
+}
+function selectInput(field, value, options) {
+  return `<select data-field="${field}">${options.map((o) => `<option value="${esc(o.id)}" ${o.id === value ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+}
+function checkboxRow(field, label, checked) {
+  return `<label class="checkbox-row"><input data-field="${field}" type="checkbox" ${checked ? "checked" : ""}/> ${esc(label)}</label>`;
+}
+function gameInput(value) {
+  return `<input data-field="game" list="games-datalist" value="${esc(value ?? "")}" placeholder="Spiel zuordnen…" />`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Generischer Drawer / Editor
+// ─────────────────────────────────────────────────────────────────────────
+function openEditor(kind, doc) {
+  const empty = deepClone(EMPTY_FORMS[kind]);
+  const form = doc ? { ...empty, ...deepClone(doc) } : empty;
+  state.editing = { kind, id: doc?.id || null, form, originalStatus: doc?.status };
+
+  const titles = DRAWER_TITLES[kind];
+  el("drawer-title").textContent = doc ? titles.edit : titles.new;
+  el("drawer-save").textContent = doc ? titles.save : titles.create;
+  el("drawer-delete").classList.toggle("hidden", !doc);
+
+  el("drawer-body").innerHTML = FORM_RENDERERS[kind](form);
+  if (WIDGET_WIRERS[kind]) WIDGET_WIRERS[kind](form);
+
+  el("drawer-overlay").classList.remove("hidden");
+  const firstInput = el("drawer-body").querySelector("input, textarea, select");
+  if (firstInput) firstInput.focus();
+}
+
+function closeEditor() {
+  state.editing = null;
+  el("drawer-overlay").classList.add("hidden");
+}
+
+// Generischer Input/Change-Handler für alle data-field Elemente im Drawer
+function onDrawerFieldChange(e) {
+  const field = e.target.dataset.field;
+  if (!field || !state.editing) return;
+  let val = e.target.value;
+  if (e.target.type === "checkbox") val = e.target.checked;
+  setField(state.editing.form, field, val);
+
+  // Profil-URL Link-Icon live aktualisieren (falls vorhanden)
+  if (field === "profileUrl") {
+    const link = el("f-profileUrl-link");
+    if (link) {
+      if (val) { link.href = val; link.classList.remove("hidden"); }
+      else { link.classList.add("hidden"); }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Formular-Templates je Entitätstyp
+// ─────────────────────────────────────────────────────────────────────────
+const FORM_RENDERERS = {
+  contact: (f) => `
+    ${fieldWrap("Name", textInput("name", "z. B. Sarah Plays", f.name))}
+    <div class="field-row">
+      ${fieldWrap("Typ", selectInput("type", f.type, CONTACT_TYPES))}
+      ${fieldWrap("Plattform", selectInput("platform", f.platform, PLATFORMS))}
+    </div>
+    ${fieldWrap("Spiel", gameInput(f.game))}
+    ${fieldWrap("Content-Typ", `<div class="chip-group" id="f-content-types"></div>`)}
+    ${fieldWrap("Tags", `<div class="tag-input-wrap" id="f-tags"></div>`)}
+    ${fieldWrap("Profil-URL", `<div class="input-with-icon">${textInput("profileUrl", "https://…", f.profileUrl)}<a id="f-profileUrl-link" href="${esc(f.profileUrl || "#")}" target="_blank" rel="noreferrer" class="${f.profileUrl ? "" : "hidden"}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a></div>`)}
+    <div class="field-row">
+      ${fieldWrap("E-Mail", textInput("email", "kontakt@…", f.email))}
+      ${fieldWrap("Follower / Reichweite", textInput("followers", "0", f.followers, "number", "mono"))}
+    </div>
+    ${fieldWrap("Priorität", `<div class="priority-group" id="f-priority">${PRIORITIES.map((p) => `<button type="button" data-priority="${p.id}">${p.label}</button>`).join("")}</div>`)}
+    ${fieldWrap("Bearbeitungsstand", `<div id="f-stepper"></div><button type="button" id="f-decline-btn" class="decline-btn">Als abgelehnt markieren</button>`)}
+    ${checkboxRow("keySent", "Key / Review-Code wurde versendet", f.keySent)}
+    ${fieldWrap("Warum passt dieser Creator?", textareaInput("fitReason", "Warum ist dieser Kontakt eine gute Wahl für unser Spiel?", f.fitReason, 3))}
+    ${fieldWrap("Link zum veröffentlichten Content", textInput("contentUrl", "https://…", f.contentUrl))}
+    ${fieldWrap("Views nach Content-Art", `<div class="views-grid">${VIEW_TYPES.map((t) => `<div><label class="views-grid-label">${t.label}</label><input data-field="viewsByType.${t.id}" type="number" class="mono" placeholder="0" value="${esc(f.viewsByType?.[t.id] ?? "")}" /></div>`).join("")}</div>`)}
+    <div class="field-row">
+      ${fieldWrap("Letzter Kontakt", textInput("lastContactAt", "", f.lastContactAt, "date"))}
+      ${fieldWrap("Letzte Antwort", textInput("lastReplyAt", "", f.lastReplyAt, "date"))}
+    </div>
+    <div class="field-row">
+      ${fieldWrap("Reminder am", textInput("reminderAt", "", f.reminderAt, "date"))}
+      ${fieldWrap("Kampagne", selectInput("campaignId", f.campaignId || "", [{ id: "", label: "— Keine —" }, ...state.campaigns.map((c) => ({ id: c.id, label: c.name }))]))}
+    </div>
+    ${fieldWrap("Reminder-Notiz", textInput("reminderNote", "z. B. Follow-Up wegen Review", f.reminderNote))}
+    ${fieldWrap("Notizen", textareaInput("notes", "Absprachen, Deadlines, Besonderheiten…", f.notes, 4))}
+  `,
+
+  template: (f) => `
+    ${fieldWrap("Titel", textInput("title", "z. B. Key-Anfrage Standard", f.title))}
+    ${fieldWrap("Kategorie", `<div class="chip-group" id="t-category"></div>`)}
+    ${fieldWrap("Inhalt", textareaInput("content", "Text hier eingeben… Platzhalter wie {{name}} sind erlaubt.", f.content, 12))}
+  `,
+
+  task: (f) => `
+    ${fieldWrap("Titel", textInput("title", "z. B. Presse-Mailing vorbereiten", f.title))}
+    ${fieldWrap("Beschreibung", textareaInput("description", "Was ist zu tun?", f.description, 3))}
+    <div class="field-row">
+      ${fieldWrap("Priorität", `<div class="priority-group" id="task-priority">${PRIORITIES.map((p) => `<button type="button" data-priority="${p.id}">${p.label}</button>`).join("")}</div>`)}
+      ${fieldWrap("Deadline", textInput("deadline", "", f.deadline, "date"))}
+    </div>
+    <div class="field-row">
+      ${fieldWrap("Status", `<div class="chip-group" id="task-status">${TASK_STATUSES.map((s) => `<button type="button" data-status="${s.id}">${s.label}</button>`).join("")}</div>`)}
+      ${fieldWrap("Verantwortlich", textInput("assignee", "Name", f.assignee))}
+    </div>
+    <div class="field-row">
+      ${fieldWrap("Verknüpfter Creator", selectInput("contactId", f.contactId || "", [{ id: "", label: "— Keiner —" }, ...state.contacts.map((c) => ({ id: c.id, label: c.name }))]))}
+      ${fieldWrap("Verknüpftes Spiel", gameInput(f.game))}
+    </div>
+  `,
+
+  campaign: (f) => `
+    ${fieldWrap("Name", textInput("name", "z. B. Demo Launch", f.name))}
+    ${fieldWrap("Spiel", gameInput(f.game))}
+    ${fieldWrap("Status", `<div class="chip-group" id="campaign-status">${CAMPAIGN_STATUSES.map((s) => `<button type="button" data-status="${s.id}">${s.label}</button>`).join("")}</div>`)}
+    <div class="field-row">
+      ${fieldWrap("Start", textInput("startDate", "", f.startDate, "date"))}
+      ${fieldWrap("Ende", textInput("endDate", "", f.endDate, "date"))}
+    </div>
+    ${fieldWrap("Geplante Creator-Anzahl", textInput("plannedCreators", "0", f.plannedCreators, "number", "mono"))}
+    ${fieldWrap("Notizen", textareaInput("notes", "Ziele, Budget, Besonderheiten…", f.notes, 4))}
+    <p class="hint-text">Kontakte werden über das Feld „Kampagne“ im Kontakt-Formular zugeordnet — die Zahlen unten auf der Karte berechnen sich automatisch daraus.</p>
+  `,
+
+  post: (f) => `
+    ${fieldWrap("Titel", textInput("title", "z. B. Steam News: Demo live", f.title))}
+    <div class="field-row">
+      ${fieldWrap("Plattform", selectInput("platform", f.platform, POST_PLATFORMS))}
+      ${fieldWrap("Status", `<div class="chip-group" id="post-status">${POST_STATUSES.map((s) => `<button type="button" data-status="${s.id}">${s.label}</button>`).join("")}</div>`)}
+    </div>
+    ${fieldWrap("Inhalt", textareaInput("content", "Post-Text / Caption…", f.content, 8))}
+    <div class="field-row">
+      ${fieldWrap("Geplant für", textInput("scheduledDate", "", f.scheduledDate, "date"))}
+      ${fieldWrap("Spiel", gameInput(f.game))}
+    </div>
+    <div class="field-row">
+      ${fieldWrap("Kampagne", selectInput("campaignId", f.campaignId || "", [{ id: "", label: "— Keine —" }, ...state.campaigns.map((c) => ({ id: c.id, label: c.name }))]))}
+      ${fieldWrap("Views (falls veröffentlicht)", textInput("views", "0", f.views, "number", "mono"))}
+    </div>
+    ${fieldWrap("Link zum veröffentlichten Post", textInput("publishedUrl", "https://…", f.publishedUrl))}
+  `,
+
+  asset: (f) => `
+    ${fieldWrap("Name", textInput("name", "z. B. Key Art v2", f.name))}
+    ${fieldWrap("Kategorie", selectInput("category", f.category, ASSET_CATEGORIES))}
+    ${fieldWrap("Link (z. B. Google Drive)", textInput("url", "https://drive.google.com/…", f.url))}
+    ${fieldWrap("Notizen", textareaInput("notes", "Format, Auflösung, Stand…", f.notes, 3))}
+  `,
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// Widget-Wiring je Entitätstyp (Chips, Tag-Input, Stepper — keine
+// natürlichen <input>-Elemente, daher eigene Click-Handler nötig)
+// ─────────────────────────────────────────────────────────────────────────
+function wireChipGroupSingle(containerId, options, getValue, setValue) {
+  const wrap = el(containerId);
+  function paint() {
+    wrap.querySelectorAll("button").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.status === getValue() || btn.dataset.priority === getValue());
+    });
+  }
+  wrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setValue(btn.dataset.status ?? btn.dataset.priority);
+      paint();
+    });
+  });
+  paint();
+}
+
+function renderContentTypeChips(form) {
+  const wrap = el("f-content-types");
+  wrap.innerHTML = CONTENT_TYPES.map((c) => `<button type="button" data-id="${c.id}" class="${(form.contentTypes || []).includes(c.id) ? "active" : ""}">${c.label}</button>`).join("");
+  wrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const list = form.contentTypes || [];
+      form.contentTypes = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+      renderContentTypeChips(form);
+    });
+  });
+}
+
+function renderTagInput(form) {
+  const wrap = el("f-tags");
+  const tags = form.tags || [];
+  wrap.innerHTML = `
+    <div class="tag-chips">${tags.map((t) => `<span class="tag-chip">${esc(t)}<button type="button" data-remove="${esc(t)}">&times;</button></span>`).join("")}</div>
+    <input type="text" id="f-tags-input" placeholder="Tag eingeben + Enter (z. B. horror, cozy)" />
+  `;
+  wrap.querySelectorAll("[data-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      form.tags = tags.filter((t) => t !== btn.dataset.remove);
+      renderTagInput(form);
+    });
+  });
+  const input = el("f-tags-input");
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,$/, "");
+      if (val && !(form.tags || []).includes(val)) {
+        form.tags = [...(form.tags || []), val];
+        renderTagInput(form);
+        el("f-tags-input").focus();
+      } else {
+        input.value = "";
+      }
+    }
+  });
+}
+
+function renderPriorityGroup(containerId, form) {
+  const wrap = el(containerId);
+  wrap.querySelectorAll("button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.priority === form.priority);
+    btn.onclick = () => { form.priority = btn.dataset.priority; renderPriorityGroup(containerId, form); };
+  });
+}
+
+function renderStepper(form) {
+  const wrap = el("f-stepper");
+  const declined = form.status === "declined";
+  const activeIdx = FLOW.findIndex((s) => s.id === form.status);
+  wrap.innerHTML = `<div class="stepper-track">${FLOW.map((s, i) => {
+    const reached = !declined && i <= activeIdx;
+    return `
+      <button type="button" class="stepper-node" data-status="${s.id}" title="${s.label}"
+        style="border-color:${reached ? s.color : "#2C303C"};background:${reached ? s.color : "transparent"}">
+        ${reached ? `<span class="stepper-node-dot"></span>` : ""}
+      </button>
+      <div class="stepper-connector" style="background:${i < activeIdx && !declined ? s.color : "#2C303C"}"></div>`;
+  }).join("")}</div>
+  <div class="stepper-labels">${FLOW.map((s) => `<span>${s.label.split(" ")[0]}</span>`).join("")}</div>`;
+
+  wrap.querySelectorAll(".stepper-node").forEach((btn) => {
+    btn.addEventListener("click", () => { form.status = btn.dataset.status; renderStepper(form); renderDeclineBtn(form); });
+  });
+  renderDeclineBtn(form);
+}
+function renderDeclineBtn(form) {
+  const declined = form.status === "declined";
+  const btn = el("f-decline-btn");
+  btn.textContent = declined ? "● Abgelehnt" : "Als abgelehnt markieren";
+  btn.classList.toggle("active", declined);
+  btn.onclick = () => { form.status = "declined"; renderStepper(form); };
+}
+
+function renderTemplateCategoryChips(form) {
+  const wrap = el("t-category");
+  wrap.innerHTML = TEMPLATE_CATEGORIES.map((c) => `<button type="button" data-id="${c.id}" class="${form.category === c.id ? "active" : ""}" style="${form.category === c.id ? `border-color:${c.color};color:${c.color};background:${c.color}1A` : ""}">${c.label}</button>`).join("");
+  wrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => { form.category = btn.dataset.id; renderTemplateCategoryChips(form); });
+  });
+}
+
+const WIDGET_WIRERS = {
+  contact: (form) => {
+    renderContentTypeChips(form);
+    renderTagInput(form);
+    renderPriorityGroup("f-priority", form);
+    renderStepper(form);
+  },
+  template: (form) => { renderTemplateCategoryChips(form); },
+  task: (form) => {
+    renderPriorityGroup("task-priority", form);
+    wireChipGroupSingle("task-status", TASK_STATUSES, () => form.status, (v) => (form.status = v));
+  },
+  campaign: (form) => {
+    wireChipGroupSingle("campaign-status", CAMPAIGN_STATUSES, () => form.status, (v) => (form.status = v));
+  },
+  post: (form) => {
+    wireChipGroupSingle("post-status", POST_STATUSES, () => form.status, (v) => (form.status = v));
+  },
+  asset: () => {},
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Heute (Tasks for Today)
+// ─────────────────────────────────────────────────────────────────────────
+function checklistItemHtml(kind, id, label, sub) {
+  return `
+    <div class="checklist-item">
+      <button class="checklist-check" data-kind="${kind}" data-id="${id}" title="Erledigt"></button>
+      <div class="checklist-body" data-open-kind="${kind}" data-open-id="${id}">
+        <p class="checklist-label">${esc(label)}</p>
+        ${sub ? `<p class="checklist-sub">${sub}</p>` : ""}
+      </div>
+    </div>`;
+}
+
+function renderToday() {
+  const today = todayStr();
+  const dueTasks = state.tasks.filter((t) => t.status !== "done" && t.deadline && t.deadline <= today);
+  const dueFollowUps = state.contacts.filter((c) => c.reminderAt && c.reminderAt <= today);
+  const duePosts = state.posts.filter((p) => p.status !== "published" && p.scheduledDate && p.scheduledDate <= today);
+
+  const totalCount = dueTasks.length + dueFollowUps.length + duePosts.length;
+
+  function section(title, items) {
+    if (items.length === 0) return "";
+    return `<div class="checklist-section"><h2>${esc(title)} <span class="checklist-count">${items.length}</span></h2><div class="checklist">${items.join("")}</div></div>`;
+  }
+
+  const taskItems = dueTasks.map((t) => checklistItemHtml("task", t.id, t.title, `${t.deadline < today ? "Überfällig seit " + formatDate(t.deadline) : "Heute fällig"}${t.game ? " · " + esc(t.game) : ""}`));
+  const followUpItems = dueFollowUps.map((c) => checklistItemHtml("contact", c.id, `Follow-Up: ${c.name}`, c.reminderNote || `${c.reminderAt < today ? "Überfällig" : "Heute fällig"} · ${platformById(c.platform).label}`));
+  const postItems = duePosts.map((p) => checklistItemHtml("post", p.id, `${p.title} (${postPlatformById(p.platform).label})`, `${p.scheduledDate < today ? "Überfällig" : "Für heute geplant"} · Status: ${postStatusById(p.status).label}`));
+
+  el("today-container").innerHTML = `
+    <header class="page-header">
+      <h1>Heute</h1>
+      <p>${totalCount > 0 ? `${totalCount} offene Punkte für heute.` : "Alles erledigt — schöner Tag."}</p>
+    </header>
+    ${totalCount === 0
+      ? `<div class="empty-state"><h1>Nichts Dringendes für heute 🎉</h1><p>Keine fälligen Aufgaben, Follow-Ups oder geplanten Posts. Schau unter „Dashboard" für den Gesamtüberblick vorbei.</p></div>`
+      : `${section("Aufgaben", taskItems)}${section("Follow-Ups", followUpItems)}${section("Content für heute", postItems)}`
+    }
+  `;
+
+  el("today-container").querySelectorAll(".checklist-check").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const { kind, id } = btn.dataset;
+      if (kind === "task") {
+        const t = state.tasks.find((x) => x.id === id);
+        quickUpdate(id, { status: "done" }, `Aufgabe erledigt: ${t?.title || ""}`, { taskId: id });
+      } else if (kind === "contact") {
+        const c = state.contacts.find((x) => x.id === id);
+        quickUpdate(id, { reminderAt: "", reminderNote: "" }, `Follow-Up erledigt: ${c?.name || ""}`, { contactId: id });
+      } else if (kind === "post") {
+        const p = state.posts.find((x) => x.id === id);
+        quickUpdate(id, { status: "published" }, `Post veröffentlicht: ${p?.title || ""}`, { postId: id });
+      }
+    });
+  });
+  el("today-container").querySelectorAll(".checklist-body").forEach((row) => {
+    row.addEventListener("click", () => {
+      const { openKind, openId } = row.dataset;
+      const doc = state.all.find((d) => d.id === openId);
+      if (doc) openEditor(openKind, doc);
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Dashboard
+// ─────────────────────────────────────────────────────────────────────────
+const CONTACTED_PERIODS = [
+  { id: "today", label: "Heute" },
+  { id: "week", label: "Woche" },
+  { id: "month", label: "Monat" },
+  { id: "all", label: "Gesamt" },
+];
+
+function contactedCountForPeriod(period) {
+  const today = todayStr();
+  const weekAgo = daysAgoStr(7);
+  const monthAgo = daysAgoStr(30);
+  return state.contacts.filter((c) => {
+    if (!c.lastContactAt) return false;
+    if (period === "today") return c.lastContactAt === today;
+    if (period === "week") return c.lastContactAt >= weekAgo;
+    if (period === "month") return c.lastContactAt >= monthAgo;
+    return true; // all
+  }).length;
+}
+
+function topPerformers() {
+  return state.contacts
+    .map((c) => {
+      const vbt = c.viewsByType || {};
+      const total = VIEW_TYPES.reduce((s, t) => s + (Number(vbt[t.id]) || 0), 0);
+      const top = VIEW_TYPES.map((t) => ({ ...t, value: Number(vbt[t.id]) || 0 })).sort((a, b) => b.value - a.value)[0];
+      return { contact: c, total, topType: top };
+    })
+    .filter((x) => x.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+}
+
+function viewsByTypeTotals() {
+  const totals = Object.fromEntries(VIEW_TYPES.map((t) => [t.id, 0]));
+  state.contacts.forEach((c) => VIEW_TYPES.forEach((t) => (totals[t.id] += Number(c.viewsByType?.[t.id]) || 0)));
+  return totals;
+}
+
+function timelineRowHtml(ev, compact = false) {
+  return `
+    <button class="recent-row" data-open-kind="timeline" data-id="${ev.id}">
+      <div class="recent-left">
+        <span class="timeline-time mono">${formatTimeFromTs(ev.createdAt)}</span>
+        <p class="recent-name">${esc(ev.label)}</p>
+      </div>
+    </button>`;
+}
+
+function renderDashboard() {
+  const c = state.contacts;
+  if (state.loading) {
+    el("dashboard-container").innerHTML = `<div class="p-loading">Lade Marketingdaten …</div>`;
+    return;
+  }
+  if (c.length === 0 && state.tasks.length === 0 && state.campaigns.length === 0) {
+    el("dashboard-container").innerHTML = `
+      <header class="page-header"><h1>Dashboard</h1><p>Überblick über eure Marketing-Kontakte und Reichweite.</p></header>
+      <div class="empty-state"><h1>Noch keine Marketingdaten</h1><p>Sobald ihr Kontakte, Aufgaben oder Kampagnen anlegt, sammeln sich hier eure Statistiken.</p></div>`;
+    return;
+  }
+
+  const totalReach = c.reduce((s, x) => s + (Number(x.followers) || 0), 0);
+  const totalViews = c.reduce((s, x) => s + VIEW_TYPES.reduce((ss, t) => ss + (Number(x.viewsByType?.[t.id]) || 0), 0), 0);
+  const engaged = c.filter((x) => x.status !== "new" && x.status !== "declined").length;
+  const posted = c.filter((x) => x.status === "posted").length;
+  const conversion = engaged > 0 ? Math.round((posted / engaged) * 100) : 0;
+  const waitingForReply = c.filter((x) => x.status === "contacted" && !x.lastReplyAt).length;
+  const negotiating = c.filter((x) => x.status === "negotiating").length;
+
+  const byPlatform = {};
+  c.forEach((x) => { const k = x.platform || "other"; byPlatform[k] = (byPlatform[k] || 0) + 1; });
+  const platformData = Object.entries(byPlatform).map(([id, count]) => ({ label: platformById(id).label, count })).sort((a, b) => b.count - a.count);
+  const pmax = Math.max(1, ...platformData.map((p) => p.count));
+
+  const followUpsDue = c.filter((x) => x.reminderAt && x.reminderAt <= todayStr()).sort((a, b) => a.reminderAt.localeCompare(b.reminderAt));
+  const performers = topPerformers();
+  const recentTimeline = state.timeline.slice(0, 6);
+
+  el("dashboard-container").innerHTML = `
+    <header class="page-header"><h1>Dashboard</h1><p>Überblick über eure Marketing-Kontakte und Reichweite.</p></header>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-top"><span>Kontakte gesamt</span></div>
+        <p class="stat-value">${c.length}</p>
+        <p class="stat-sub">${c.filter((x) => x.type === "creator").length} Creator · ${c.filter((x) => x.type === "press").length} Presse</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top"><span>Gesamtreichweite</span></div>
+        <p class="stat-value">${formatCompact(totalReach)}</p>
+        <p class="stat-sub">Summe aller Follower / Abonnenten</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top"><span>Views aus Content</span></div>
+        <p class="stat-value">${formatCompact(totalViews)}</p>
+        <p class="stat-sub">Über alle Content-Arten summiert</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top"><span>Conversion-Rate</span></div>
+        <p class="stat-value">${conversion}%</p>
+        <p class="stat-sub">Kontaktiert → veröffentlicht</p>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-top"><span>Kontaktiert</span></div>
+        <div class="period-tabs">${CONTACTED_PERIODS.map((p) => `<button data-period="${p.id}" class="${state.dashboardContactedPeriod === p.id ? "active" : ""}">${p.label}</button>`).join("")}</div>
+        <p class="stat-value" style="margin-top:10px">${contactedCountForPeriod(state.dashboardContactedPeriod)}</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top"><span>Warten auf Antwort</span></div>
+        <p class="stat-value">${waitingForReply}</p>
+        <p class="stat-sub">Kontaktiert, noch keine Antwort erfasst</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top"><span>In Verhandlung</span></div>
+        <p class="stat-value">${negotiating}</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top"><span>Veröffentlicht</span></div>
+        <p class="stat-value">${posted}</p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h2>Pipeline</h2>
+        <div>${FLOW.map((s) => {
+          const count = c.filter((x) => x.status === s.id).length;
+          const max = Math.max(1, ...FLOW.map((f) => c.filter((x) => x.status === f.id).length));
+          const pct = Math.max(4, (count / max) * 100);
+          return `<div class="funnel-row"><span class="funnel-label">${s.label}</span><div class="funnel-track"><div class="funnel-bar" style="width:${pct}%;background:${s.color}"></div></div><span class="funnel-count">${count}</span></div>`;
+        }).join("")}</div>
+      </div>
+      <div class="card">
+        <h2>Kontakte pro Plattform</h2>
+        ${platformData.length ? platformData.map((p) => `<div class="platform-row"><span class="platform-label">${esc(p.label)}</span><div class="platform-track"><div class="platform-bar" style="width:${(p.count / pmax) * 100}%"></div></div><span class="platform-count">${p.count}</span></div>`).join("") : `<p class="chart-empty">Noch keine Daten.</p>`}
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h2>Follow-Ups fällig ${followUpsDue.length ? `<span class="checklist-count">${followUpsDue.length}</span>` : ""}</h2>
+        ${followUpsDue.length === 0 ? `<p class="chart-empty">Keine offenen Follow-Ups. 👍</p>` : followUpsDue.slice(0, 6).map((x) => `
+          <button class="recent-row" data-open-kind="contact" data-id="${x.id}">
+            <div class="recent-left">${avatarHtml(x.name)}<div><p class="recent-name">${esc(x.name)}</p><p class="recent-sub">${x.reminderAt < todayStr() ? "Überfällig seit " + formatDate(x.reminderAt) : "Heute fällig"}</p></div></div>
+          </button>`).join("")}
+      </div>
+      <div class="card">
+        <h2>Top Performer</h2>
+        ${performers.length === 0 ? `<p class="chart-empty">Noch keine Views erfasst.</p>` : performers.map((p) => `
+          <button class="recent-row" data-open-kind="contact" data-id="${p.contact.id}">
+            <div class="recent-left">${avatarHtml(p.contact.name)}<div><p class="recent-name">${esc(p.contact.name)}</p><p class="recent-sub">${p.topType.label}: ${formatCompact(p.topType.value)}</p></div></div>
+            <span class="mono top-performer-total">${formatCompact(p.total)}</span>
+          </button>`).join("")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Timeline aus Aktionen</h2>
+      ${recentTimeline.length === 0 ? `<p class="chart-empty">Noch keine Aktivitäten protokolliert.</p>` : recentTimeline.map((ev) => timelineRowHtml(ev)).join("")}
+    </div>
+  `;
+
+  el("dashboard-container").querySelectorAll("[data-period]").forEach((btn) => {
+    btn.addEventListener("click", () => { state.dashboardContactedPeriod = btn.dataset.period; renderDashboard(); });
+  });
+  el("dashboard-container").querySelectorAll("[data-open-kind]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const doc = state.all.find((d) => d.id === btn.dataset.id);
+      if (doc) openEditor(btn.dataset.openKind, doc);
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Kontakte
+// ─────────────────────────────────────────────────────────────────────────
+function contentTypeCellHtml(contentTypes) {
+  const types = contentTypes || [];
+  if (types.length === 0) return `<span class="content-type-empty">—</span>`;
+  const shown = types.slice(0, 2).map((id) => `<span class="content-type-tag">${esc(contentTypeById(id).label)}</span>`).join("");
+  const rest = types.length > 2 ? `<span class="content-type-more">+${types.length - 2}</span>` : "";
+  return `<div class="content-type-cell">${shown}${rest}</div>`;
+}
+function reminderCellHtml(c) {
+  if (!c.reminderAt) return `<span class="content-type-empty">—</span>`;
+  const overdue = c.reminderAt <= todayStr();
+  return `<span class="reminder-badge ${overdue ? "due" : ""}">${formatDate(c.reminderAt)}</span>`;
+}
+
+function renderContacts() {
+  const tbody = el("contacts-tbody");
+  let list = state.contacts
+    .filter((c) => (state.typeFilter === "all" ? true : c.type === state.typeFilter))
+    .filter((c) => (state.statusFilter === "all" ? true : c.status === state.statusFilter))
+    .filter((c) => (state.contentTypeFilter === "all" ? true : (c.contentTypes || []).includes(state.contentTypeFilter)))
+    .filter((c) => (state.gameFilter === "all" ? true : c.game === state.gameFilter))
+    .filter((c) => (state.tagFilter === "all" ? true : (c.tags || []).includes(state.tagFilter)))
+    .filter((c) => (state.search ? c.name?.toLowerCase().includes(state.search.toLowerCase()) : true));
+
+  if (state.loading) { tbody.innerHTML = `<tr class="empty-row"><td colspan="8">Lade Kontakte …</td></tr>`; return; }
+  if (list.length === 0) { tbody.innerHTML = `<tr class="empty-row"><td colspan="8">Keine Kontakte gefunden.</td></tr>`; return; }
+
+  tbody.innerHTML = list.map((c) => `
+    <tr data-id="${c.id}">
+      <td>
+        <div class="row-name-cell">
+          ${avatarHtml(c.name)}
+          <div>
+            <p class="row-name">${esc(c.name)}</p>
+            <p class="row-sub">${c.type === "creator" ? "Content Creator" : "Presse / Media"}${(c.tags || []).length ? " · " + (c.tags || []).map(esc).join(", ") : ""}</p>
+          </div>
+        </div>
+      </td>
+      <td><span class="platform-cell">${esc(platformById(c.platform).label)}</span></td>
+      <td>${c.game ? esc(c.game) : `<span class="content-type-empty">—</span>`}</td>
+      <td>${contentTypeCellHtml(c.contentTypes)}</td>
+      <td class="mono">${formatCompact(c.followers)}</td>
+      <td>${statusBadgeHtml(c.status)}</td>
+      <td>${reminderCellHtml(c)}</td>
+      <td>${formatDate(c.lastContactAt)}</td>
+    </tr>`).join("");
+
+  tbody.querySelectorAll("tr[data-id]").forEach((row) => {
+    row.addEventListener("click", () => openEditor("contact", state.contacts.find((c) => c.id === row.dataset.id)));
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Aufgaben (Kanban)
+// ─────────────────────────────────────────────────────────────────────────
+function taskCardHtml(t) {
+  const contact = t.contactId ? contactById(t.contactId) : null;
+  const overdue = t.status !== "done" && t.deadline && t.deadline < todayStr();
+  return `
+    <div class="kanban-card" data-id="${t.id}">
+      <div class="kanban-card-head">
+        <span class="priority-dot" style="background:${priorityById(t.priority).color}"></span>
+        <p class="kanban-card-title">${esc(t.title)}</p>
+      </div>
+      ${t.description ? `<p class="kanban-card-desc">${esc(t.description)}</p>` : ""}
+      <div class="kanban-card-foot">
+        ${t.deadline ? `<span class="kanban-tag ${overdue ? "overdue" : ""}">${formatDate(t.deadline)}</span>` : ""}
+        ${t.game ? `<span class="kanban-tag">${esc(t.game)}</span>` : ""}
+        ${contact ? `<span class="kanban-tag">${esc(contact.name)}</span>` : ""}
+        ${t.assignee ? `<span class="kanban-tag">${esc(t.assignee)}</span>` : ""}
+      </div>
+    </div>`;
+}
+
+function renderTasks() {
+  const list = state.tasks.filter((t) => (state.taskGameFilter === "all" ? true : t.game === state.taskGameFilter));
+
+  if (state.loading) { el("tasks-container").innerHTML = `<div class="p-loading">Lade Aufgaben …</div>`; return; }
+
+  el("tasks-container").innerHTML = `
+    <div class="kanban-board">
+      ${TASK_STATUSES.map((s) => {
+        const items = list.filter((t) => t.status === s.id);
+        return `
+          <div class="kanban-col">
+            <div class="kanban-col-head"><span class="badge-dot" style="background:${s.color}"></span>${s.label} <span class="checklist-count">${items.length}</span></div>
+            <div class="kanban-col-body">${items.length ? items.map(taskCardHtml).join("") : `<p class="chart-empty">Keine Aufgaben.</p>`}</div>
+          </div>`;
+      }).join("")}
+    </div>`;
+
+  el("tasks-container").querySelectorAll(".kanban-card").forEach((card) => {
+    card.addEventListener("click", () => openEditor("task", state.tasks.find((t) => t.id === card.dataset.id)));
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Kampagnen
+// ─────────────────────────────────────────────────────────────────────────
+function campaignCardHtml(camp) {
+  const linked = state.contacts.filter((c) => c.campaignId === camp.id);
+  const contacted = linked.filter((c) => c.status !== "new").length;
+  const accepted = linked.filter((c) => ["key_sent", "posted"].includes(c.status)).length;
+  const published = linked.filter((c) => c.status === "posted").length;
+  const declined = linked.filter((c) => c.status === "declined").length;
+  const planned = Number(camp.plannedCreators) || linked.length;
+  const s = campaignStatusById(camp.status);
+
+  return `
+    <div class="campaign-card" data-id="${camp.id}">
+      <div class="campaign-card-head">
+        <div>
+          <p class="campaign-title">${esc(camp.name)}</p>
+          ${camp.game ? `<p class="campaign-game">${esc(camp.game)}</p>` : ""}
+        </div>
+        ${badgeHtml(s.label, s.color)}
+      </div>
+      <p class="campaign-dates mono">${camp.startDate ? formatDate(camp.startDate) : "—"} → ${camp.endDate ? formatDate(camp.endDate) : "—"}</p>
+      <div class="campaign-stats">
+        <div class="campaign-stat"><span class="campaign-stat-value">${planned}</span><span class="campaign-stat-label">Creator geplant</span></div>
+        <div class="campaign-stat"><span class="campaign-stat-value">${contacted}</span><span class="campaign-stat-label">kontaktiert</span></div>
+        <div class="campaign-stat"><span class="campaign-stat-value">${accepted}</span><span class="campaign-stat-label">zugesagt</span></div>
+        <div class="campaign-stat"><span class="campaign-stat-value">${published}</span><span class="campaign-stat-label">veröffentlicht</span></div>
+        <div class="campaign-stat"><span class="campaign-stat-value">${declined}</span><span class="campaign-stat-label">abgesagt</span></div>
+      </div>
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:${planned > 0 ? Math.min(100, (contacted / planned) * 100) : 0}%"></div></div>
+    </div>`;
+}
+
+function renderCampaigns() {
+  const wrap = el("campaigns-container");
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Kampagnen …</div>`; return; }
+  if (state.campaigns.length === 0) { wrap.innerHTML = `<p class="template-grid-empty">Noch keine Kampagnen angelegt.</p>`; return; }
+  wrap.innerHTML = state.campaigns.map(campaignCardHtml).join("");
+  wrap.querySelectorAll(".campaign-card").forEach((card) => {
+    card.addEventListener("click", () => openEditor("campaign", state.campaigns.find((c) => c.id === card.dataset.id)));
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Content-Planer (Wochenkalender aus Posts)
+// ─────────────────────────────────────────────────────────────────────────
+const WEEKDAY_LABELS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
+function renderPlanner() {
+  const start = state.plannerWeekStart;
+  const end = addDays(start, 6);
+  el("planner-range").textContent = `${formatShortDate(start)} – ${formatShortDate(end)}`;
+
+  const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  el("planner-container").innerHTML = days.map((day) => {
+    const dateStr = toDateStr(day);
+    const items = state.posts.filter((p) => p.scheduledDate === dateStr);
+    const isToday = dateStr === todayStr();
+    return `
+      <div class="calendar-day ${isToday ? "is-today" : ""}">
+        <div class="calendar-day-head">
+          <span>${WEEKDAY_LABELS[(day.getDay() + 6) % 7]}</span>
+          <span class="mono">${formatShortDate(day)}</span>
+        </div>
+        <div class="calendar-day-body">
+          ${items.map((p) => `<div class="calendar-item" data-id="${p.id}" style="border-left-color:${postStatusById(p.status).color}">${esc(p.title)}<span class="calendar-item-sub">${postPlatformById(p.platform).label}</span></div>`).join("")}
+          <button class="calendar-add" data-date="${dateStr}">+ Post</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  el("planner-container").querySelectorAll(".calendar-item").forEach((it) => {
+    it.addEventListener("click", () => openEditor("post", state.posts.find((p) => p.id === it.dataset.id)));
+  });
+  el("planner-container").querySelectorAll(".calendar-add").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const empty = deepClone(EMPTY_FORMS.post);
+      empty.scheduledDate = btn.dataset.date;
+      openEditor("post", null);
+      state.editing.form.scheduledDate = btn.dataset.date;
+      el("drawer-body").querySelector('[data-field="scheduledDate"]').value = btn.dataset.date;
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Post-Bibliothek
+// ─────────────────────────────────────────────────────────────────────────
+function postCardHtml(p) {
+  return `
+    <div class="template-card" data-id="${p.id}">
+      <div class="template-card-head">
+        <p class="template-title">${esc(p.title)}</p>
+        ${postStatusBadgeHtml(p.status)}
+      </div>
+      <p class="template-preview">${esc(p.content || "")}</p>
+      <div class="template-card-foot">
+        <span class="kanban-tag">${esc(postPlatformById(p.platform).label)}</span>
+        ${p.scheduledDate ? `<span class="mono" style="font-size:11px;color:var(--mist-faint)">${formatDate(p.scheduledDate)}</span>` : ""}
+        <button class="template-copy-btn" data-copy="${encodeURIComponent(p.content || "")}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Kopieren
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderPosts() {
+  const wrap = el("posts-container");
+  let list = state.posts
+    .filter((p) => (state.postStatusFilter === "all" ? true : p.status === state.postStatusFilter))
+    .filter((p) => (state.postPlatformFilter === "all" ? true : p.platform === state.postPlatformFilter));
+
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Posts …</div>`; return; }
+  if (list.length === 0) { wrap.innerHTML = `<p class="template-grid-empty">Keine Posts gefunden.</p>`; return; }
+
+  wrap.innerHTML = list.map(postCardHtml).join("");
+  wrap.querySelectorAll(".template-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".template-copy-btn")) return;
+      openEditor("post", state.posts.find((p) => p.id === card.dataset.id));
+    });
+  });
+  wireCopyButtons(wrap);
+}
+
+function wireCopyButtons(scope) {
+  scope.querySelectorAll(".template-copy-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const text = decodeURIComponent(btn.dataset.copy);
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.classList.add("copied");
+        const original = btn.innerHTML;
+        btn.textContent = "Kopiert!";
+        setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = original; }, 1500);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Asset-Bibliothek
+// ─────────────────────────────────────────────────────────────────────────
+function renderAssets() {
+  const wrap = el("assets-container");
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Assets …</div>`; return; }
+
+  wrap.innerHTML = ASSET_CATEGORIES.map((cat) => {
+    const items = state.assets.filter((a) => a.category === cat.id);
+    return `
+      <div class="asset-group">
+        <div class="asset-group-head">
+          <h2>${cat.label}</h2>
+          <button class="icon-btn" data-add-category="${cat.id}" title="Asset in ${cat.label} hinzufügen">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        ${items.length === 0
+          ? `<p class="chart-empty">Noch keine Einträge.</p>`
+          : items.map((a) => `
+            <div class="asset-item" data-id="${a.id}">
+              <span class="asset-item-name">${esc(a.name)}</span>
+              ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noreferrer" class="asset-item-link" data-nav>↗ Öffnen</a>` : `<span class="content-type-empty">Kein Link</span>`}
+            </div>`).join("")}
+      </div>`;
+  }).join("");
+
+  wrap.querySelectorAll("[data-add-category]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openEditor("asset", null);
+      state.editing.form.category = btn.dataset.addCategory;
+      el("drawer-body").querySelector('[data-field="category"]').value = btn.dataset.addCategory;
+    });
+  });
+  wrap.querySelectorAll(".asset-item").forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("[data-nav]")) return;
+      openEditor("asset", state.assets.find((a) => a.id === row.dataset.id));
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Textbausteine
+// ─────────────────────────────────────────────────────────────────────────
+function templateCardHtml(t) {
+  const cat = templateCategoryById(t.category);
+  return `
+    <div class="template-card" data-id="${t.id}">
+      <div class="template-card-head">
+        <p class="template-title">${esc(t.title)}</p>
+        ${badgeHtml(cat.label, cat.color)}
+      </div>
+      <p class="template-preview">${esc(t.content || "")}</p>
+      <div class="template-card-foot">
+        <span></span>
+        <button class="template-copy-btn" data-copy="${encodeURIComponent(t.content || "")}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Kopieren
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderTemplates() {
+  const wrap = el("template-grid");
+  let list = state.templates
+    .filter((t) => (state.templateCategoryFilter === "all" ? true : t.category === state.templateCategoryFilter))
+    .filter((t) => (state.templateSearch ? t.title?.toLowerCase().includes(state.templateSearch.toLowerCase()) : true));
+
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Textbausteine …</div>`; return; }
+  if (list.length === 0) { wrap.innerHTML = `<p class="template-grid-empty">Keine Textbausteine gefunden.</p>`; return; }
+
+  wrap.innerHTML = list.map(templateCardHtml).join("");
+  wrap.querySelectorAll(".template-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".template-copy-btn")) return;
+      openEditor("template", state.templates.find((t) => t.id === card.dataset.id));
+    });
+  });
+  wireCopyButtons(wrap);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Marketing Timeline
+// ─────────────────────────────────────────────────────────────────────────
+function renderTimeline() {
+  const wrap = el("timeline-container");
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Timeline …</div>`; return; }
+
+  const groups = [];
+  let currentDay = null;
+  state.timeline.forEach((ev) => {
+    const dayLabel = formatDayFromTs(ev.createdAt);
+    if (dayLabel !== currentDay) {
+      groups.push({ day: dayLabel, events: [] });
+      currentDay = dayLabel;
+    }
+    groups[groups.length - 1].events.push(ev);
+  });
+
+  wrap.innerHTML = `
+    <header class="page-header"><h1>Marketing Timeline</h1><p>Chronik aus allen Marketing-Aktivitäten.</p></header>
+    <div class="field-row" style="margin-bottom:20px">
+      <input type="text" id="timeline-manual-input" placeholder="Eigenen Eintrag hinzufügen… (Enter zum Speichern)" />
+    </div>
+    ${groups.length === 0
+      ? `<p class="chart-empty">Noch keine Aktivitäten protokolliert.</p>`
+      : groups.map((g) => `
+        <div class="timeline-day-group">
+          <h2>${g.day}</h2>
+          <div class="timeline-list">
+            ${g.events.map((ev) => `<div class="timeline-row"><span class="timeline-time mono">${formatTimeFromTs(ev.createdAt)}</span><p>${esc(ev.label)}</p></div>`).join("")}
+          </div>
+        </div>`).join("")
+    }
+  `;
+
+  el("timeline-manual-input").addEventListener("keydown", async (e) => {
+    if (e.key === "Enter" && e.target.value.trim()) {
+      const label = e.target.value.trim();
+      e.target.value = "";
+      e.target.disabled = true;
+      await logTimeline(label);
+      e.target.disabled = false;
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// View: Wochenreport
+// ─────────────────────────────────────────────────────────────────────────
+function renderReport() {
+  const wrap = el("report-container");
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Report …</div>`; return; }
+
+  const weekAgo = daysAgoStr(7);
+  const c = state.contacts;
+
+  const mails = c.filter((x) => x.lastContactAt && x.lastContactAt >= weekAgo).length;
+  const replies = c.filter((x) => x.lastReplyAt && x.lastReplyAt >= weekAgo).length;
+  const deals = c.filter((x) => ["key_sent", "posted"].includes(x.status) && tsToMillis(x.updatedAt) >= Date.now() - 7 * 86400000).length;
+  const videosPublished = c.filter((x) => x.status === "posted" && (x.contentTypes || []).some((ct) => ["letsplay", "reviewer", "streamer"].includes(ct)) && tsToMillis(x.updatedAt) >= Date.now() - 7 * 86400000).length;
+  const weeklyViews = c.filter((x) => tsToMillis(x.updatedAt) >= Date.now() - 7 * 86400000).reduce((s, x) => s + VIEW_TYPES.reduce((ss, t) => ss + (Number(x.viewsByType?.[t.id]) || 0), 0), 0);
+  const pressArticles = c.filter((x) => x.type === "press" && x.status === "posted" && tsToMillis(x.updatedAt) >= Date.now() - 7 * 86400000).length;
+  const newCreators = c.filter((x) => tsToMillis(x.createdAt) >= Date.now() - 7 * 86400000).length;
+
+  const items = [
+    { label: "Kontaktiert", value: mails },
+    { label: "Antworten", value: replies },
+    { label: "Zusagen", value: deals },
+    { label: "Videos veröffentlicht", value: videosPublished },
+    { label: "Views", value: formatCompact(weeklyViews) },
+    { label: "Presseartikel", value: pressArticles },
+    { label: "Neue Creator", value: newCreators },
+  ];
+
+  wrap.innerHTML = `
+    <header class="page-header"><h1>Wochenreport</h1><p>Diese Woche (${formatDate(weekAgo)} – ${formatDate(todayStr())})</p></header>
+    <div class="stat-grid report-grid">
+      ${items.map((i) => `<div class="stat-card"><div class="stat-top"><span>${i.label}</span></div><p class="stat-value">${i.value}</p></div>`).join("")}
+    </div>
+    <p class="hint-text">Basiert auf den Zeitstempeln „Letzter Kontakt“, „Letzte Antwort“ und den zuletzt aktualisierten Kontakten der letzten 7 Tage.</p>
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sidebar-Zähler & dynamische Filter-Optionen (Spiele, Tags)
+// ─────────────────────────────────────────────────────────────────────────
+function renderSidebarCounts() {
+  const set = (id, n) => { const node = el(id); if (node) node.textContent = n > 0 ? n : ""; };
+  set("nav-count-contacts", state.contacts.length);
+  set("nav-count-tasks", state.tasks.filter((t) => t.status !== "done").length);
+  set("nav-count-campaigns", state.campaigns.length);
+  set("nav-count-posts", state.posts.length);
+  set("nav-count-templates", state.templates.length);
+  document.querySelectorAll(".nav-item").forEach((btn) => btn.classList.toggle("active", btn.dataset.view === state.view));
+}
+
+function refreshDynamicFilterOptions() {
+  function buildGameSelect(selectEl, allLabel) {
+    if (!selectEl) return;
+    const current = selectEl.value;
+    selectEl.innerHTML = `<option value="all">${allLabel}</option>` + state.games.map((g) => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
+    if ([...selectEl.options].some((o) => o.value === current)) selectEl.value = current;
+  }
+  buildGameSelect(el("game-filter"), "Alle Spiele");
+  buildGameSelect(el("task-game-filter"), "Alle Spiele");
+
+  const tagSel = el("tag-filter");
+  if (tagSel) {
+    const current = tagSel.value;
+    tagSel.innerHTML = `<option value="all">Alle Tags</option>` + state.tags.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+    if ([...tagSel.options].some((o) => o.value === current)) tagSel.value = current;
+  }
+
+  const datalist = el("games-datalist");
+  if (datalist) datalist.innerHTML = state.games.map((g) => `<option value="${esc(g)}"></option>`).join("");
+}
+
+function initStaticFilterOptions() {
+  el("status-filter").innerHTML = `<option value="all">Alle Status</option>` + PIPELINE.map((s) => `<option value="${s.id}">${s.label}</option>`).join("");
+  el("content-type-filter").innerHTML = `<option value="all">Alle Content-Typen</option>` + CONTENT_TYPES.map((c) => `<option value="${c.id}">${c.label}</option>`).join("");
+  el("post-platform-filter").innerHTML = `<option value="all">Alle Plattformen</option>` + POST_PLATFORMS.map((p) => `<option value="${p.id}">${p.label}</option>`).join("");
+
+  const tplWrap = el("template-category-filter");
+  tplWrap.innerHTML = `<button class="tab active" data-cat="all">Alle</button>` + TEMPLATE_CATEGORIES.map((c) => `<button class="tab" data-cat="${c.id}">${c.label}</button>`).join("");
+  tplWrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.templateCategoryFilter = btn.dataset.cat;
+      tplWrap.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      renderTemplates();
+    });
+  });
+
+  const postWrap = el("post-status-filter");
+  postWrap.innerHTML = `<button class="tab active" data-status="all">Alle</button>` + POST_STATUSES.map((s) => `<button class="tab" data-status="${s.id}">${s.label}</button>`).join("");
+  postWrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.postStatusFilter = btn.dataset.status;
+      postWrap.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      renderPosts();
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Master render orchestrator
+// ─────────────────────────────────────────────────────────────────────────
+const VIEW_RENDERERS = {
+  today: renderToday, dashboard: renderDashboard, timeline: renderTimeline, report: renderReport,
+  contacts: renderContacts, tasks: renderTasks, campaigns: renderCampaigns, planner: renderPlanner,
+  posts: renderPosts, assets: renderAssets, templates: renderTemplates,
+};
+
+function render() {
+  const errBanner = el("error-banner");
+  if (state.error) {
+    errBanner.textContent = `Hinweis: ${state.error}`;
+    errBanner.classList.remove("hidden");
+  } else {
+    errBanner.classList.add("hidden");
+  }
+
+  renderSidebarCounts();
+  Object.keys(VIEW_RENDERERS).forEach((v) => {
+    const section = el(`view-${v}`);
+    if (section) section.classList.toggle("hidden", state.view !== v);
+  });
+  const fn = VIEW_RENDERERS[state.view];
+  if (fn) fn();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Event-Wiring (läuft synchron, unabhängig von Firebase)
+// ─────────────────────────────────────────────────────────────────────────
+function wireUI() {
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.addEventListener("click", () => { state.view = btn.dataset.view; render(); });
+  });
+
+  el("btn-new-contact").addEventListener("click", () => openEditor("contact", null));
+  document.querySelectorAll("#type-filter .tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.typeFilter = btn.dataset.type;
+      document.querySelectorAll("#type-filter .tab").forEach((b) => b.classList.toggle("active", b === btn));
+      renderContacts();
+    });
+  });
+  el("status-filter").addEventListener("change", (e) => { state.statusFilter = e.target.value; renderContacts(); });
+  el("content-type-filter").addEventListener("change", (e) => { state.contentTypeFilter = e.target.value; renderContacts(); });
+  el("game-filter").addEventListener("change", (e) => { state.gameFilter = e.target.value; renderContacts(); });
+  el("tag-filter").addEventListener("change", (e) => { state.tagFilter = e.target.value; renderContacts(); });
+  el("search-input").addEventListener("input", (e) => { state.search = e.target.value; renderContacts(); });
+
+  el("btn-new-task").addEventListener("click", () => openEditor("task", null));
+  el("task-game-filter").addEventListener("change", (e) => { state.taskGameFilter = e.target.value; renderTasks(); });
+
+  el("btn-new-campaign").addEventListener("click", () => openEditor("campaign", null));
+
+  el("planner-prev").addEventListener("click", () => { state.plannerWeekStart = addDays(state.plannerWeekStart, -7); renderPlanner(); });
+  el("planner-next").addEventListener("click", () => { state.plannerWeekStart = addDays(state.plannerWeekStart, 7); renderPlanner(); });
+
+  el("btn-new-post").addEventListener("click", () => openEditor("post", null));
+  el("post-platform-filter").addEventListener("change", (e) => { state.postPlatformFilter = e.target.value; renderPosts(); });
+
+  el("btn-new-template").addEventListener("click", () => openEditor("template", null));
+  el("template-search-input").addEventListener("input", (e) => { state.templateSearch = e.target.value; renderTemplates(); });
+
+  el("drawer-backdrop").addEventListener("click", closeEditor);
+  el("drawer-close").addEventListener("click", closeEditor);
+  el("drawer-save").addEventListener("click", saveEditing);
+  el("drawer-delete").addEventListener("click", deleteEditing);
+  el("drawer-body").addEventListener("input", onDrawerFieldChange);
+  el("drawer-body").addEventListener("change", onDrawerFieldChange);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────
+initStaticFilterOptions();
+wireUI();
+render();
+initFirebase();
+
+</script>
+</body>
+</html>

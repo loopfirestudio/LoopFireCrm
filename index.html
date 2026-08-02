@@ -598,6 +598,7 @@ textarea { resize: none; }
           </div>
           <select id="status-filter" class="select"></select>
           <select id="content-type-filter" class="select"></select>
+          <select id="platform-filter" class="select"></select>
           <select id="game-filter" class="select"></select>
           <select id="tag-filter" class="select"></select>
           <select id="priority-filter" class="select"></select>
@@ -801,6 +802,7 @@ const PLATFORMS = [
   { id: "tiktok", label: "TikTok" },
   { id: "instagram", label: "Instagram" },
   { id: "x", label: "X / Twitter" },
+  { id: "reddit", label: "Reddit" },
   { id: "press", label: "Presse-Outlet" },
   { id: "other", label: "Sonstiges" },
 ];
@@ -929,7 +931,7 @@ const state = {
   games: [], tags: [],
 
   // Filter/UI-State pro View
-  typeFilter: "all", statusFilter: "all", contentTypeFilter: "all", gameFilter: "all", tagFilter: "all", priorityFilter: "all", search: "",
+  typeFilter: "all", statusFilter: "all", contentTypeFilter: "all", platformFilter: "all", gameFilter: "all", tagFilter: "all", priorityFilter: "all", search: "",
   taskGameFilter: "all",
   templateCategoryFilter: "all", templateSearch: "",
   postStatusFilter: "all", postPlatformFilter: "all",
@@ -1752,6 +1754,7 @@ function renderContacts() {
     .filter((c) => (state.typeFilter === "all" ? true : c.type === state.typeFilter))
     .filter((c) => (state.statusFilter === "all" ? true : c.status === state.statusFilter))
     .filter((c) => (state.contentTypeFilter === "all" ? true : (c.contentTypes || []).includes(state.contentTypeFilter)))
+    .filter((c) => (state.platformFilter === "all" ? true : c.platform === state.platformFilter))
     .filter((c) => (state.gameFilter === "all" ? true : c.game === state.gameFilter))
     .filter((c) => (state.tagFilter === "all" ? true : (c.tags || []).includes(state.tagFilter)))
     .filter((c) => (state.priorityFilter === "all" ? true : c.priority === state.priorityFilter))
@@ -2176,6 +2179,7 @@ function refreshDynamicFilterOptions() {
 function initStaticFilterOptions() {
   el("status-filter").innerHTML = `<option value="all">Alle Status</option>` + PIPELINE.map((s) => `<option value="${s.id}">${s.label}</option>`).join("");
   el("content-type-filter").innerHTML = `<option value="all">Alle Content-Typen</option>` + CONTENT_TYPES.map((c) => `<option value="${c.id}">${c.label}</option>`).join("");
+  el("platform-filter").innerHTML = `<option value="all">Alle Plattformen</option>` + PLATFORMS.map((p) => `<option value="${p.id}">${p.label}</option>`).join("");
   el("priority-filter").innerHTML = `<option value="all">Alle Prioritäten</option>` + PRIORITIES.map((p) => `<option value="${p.id}">${p.label}</option>`).join("");
   el("post-platform-filter").innerHTML = `<option value="all">Alle Plattformen</option>` + POST_PLATFORMS.map((p) => `<option value="${p.id}">${p.label}</option>`).join("");
 
@@ -2245,6 +2249,7 @@ function wireUI() {
   });
   el("status-filter").addEventListener("change", (e) => { state.statusFilter = e.target.value; renderContacts(); });
   el("content-type-filter").addEventListener("change", (e) => { state.contentTypeFilter = e.target.value; renderContacts(); });
+  el("platform-filter").addEventListener("change", (e) => { state.platformFilter = e.target.value; renderContacts(); });
   el("game-filter").addEventListener("change", (e) => { state.gameFilter = e.target.value; renderContacts(); });
   el("tag-filter").addEventListener("change", (e) => { state.tagFilter = e.target.value; renderContacts(); });
   el("priority-filter").addEventListener("change", (e) => { state.priorityFilter = e.target.value; renderContacts(); });

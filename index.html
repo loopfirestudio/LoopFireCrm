@@ -445,6 +445,15 @@ textarea { resize: none; }
 .views-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .views-grid-label { display: block; font-size: 10px; color: var(--mist-faint); margin-bottom: 4px; }
 
+.pub-list { display: flex; flex-direction: column; gap: 8px; }
+.pub-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 6px; align-items: center; }
+.pub-add {
+  align-self: flex-start; padding: 6px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  background: transparent; border: 1px dashed var(--ink-border); color: var(--mist-dim);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.pub-add:hover { border-color: var(--violet); color: var(--violet); }
+
 /* ─── Reminder Badge (Kontakte-Tabelle) ─── */
 .reminder-badge { font-size: 11.5px; color: var(--mist-dim); }
 .reminder-badge.due { color: var(--coral); font-weight: 500; }
@@ -897,7 +906,7 @@ const EMPTY_FORMS = {
   contact: {
     name: "", type: "creator", platform: "youtube", contentTypes: [], game: "", tags: [],
     profileUrl: "", email: "", followers: "", priority: "medium", status: "new", keySent: false,
-    contentUrl: "", viewsByType: { video: "", livestream: "", short: "", review: "", article: "" },
+    contentUrl: "", publishedContents: [], viewsByType: { video: "", livestream: "", short: "", review: "", article: "" },
     fitReason: "", lastContactAt: "", lastReplyAt: "", reminderAt: "", reminderNote: "",
     campaignId: "", notes: "",
   },
@@ -1051,6 +1060,8 @@ async function logTimeline(label, refs = {}) {
 function coerceNumbers(kind, payload) {
   if (kind === "contact") {
     payload.followers = Number(payload.followers) || 0;
+    payload.publishedContents = (payload.publishedContents || []).filter((it) => it.url && it.url.trim()).map((it) => ({ type: it.type || "video", url: it.url.trim() }));
+    payload.contentUrl = payload.publishedContents[0]?.url || "";
     const vbt = payload.viewsByType || {};
     payload.viewsByType = Object.fromEntries(VIEW_TYPES.map((t) => [t.id, Number(vbt[t.id]) || 0]));
   }
@@ -1222,6 +1233,9 @@ function gameInput(value) {
 function openEditor(kind, doc) {
   const empty = deepClone(EMPTY_FORMS[kind]);
   const form = doc ? { ...empty, ...deepClone(doc) } : empty;
+  if (kind === "contact" && !Array.isArray(form.publishedContents)) {
+    form.publishedContents = form.contentUrl ? [{ type: "video", url: form.contentUrl }] : [];
+  }
   state.editing = { kind, id: doc?.id || null, form, originalStatus: doc?.status };
 
   const titles = DRAWER_TITLES[kind];
@@ -1282,7 +1296,7 @@ const FORM_RENDERERS = {
     ${fieldWrap("Bearbeitungsstand", `<div id="f-stepper"></div><button type="button" id="f-decline-btn" class="decline-btn">Als abgelehnt markieren</button>`)}
     ${checkboxRow("keySent", "Key / Review-Code wurde versendet", f.keySent)}
     ${fieldWrap("Warum passt dieser Creator?", textareaInput("fitReason", "Warum ist dieser Kontakt eine gute Wahl für unser Spiel?", f.fitReason, 3))}
-    ${fieldWrap("Link zum veröffentlichten Content", textInput("contentUrl", "https://…", f.contentUrl))}
+    ${fieldWrap("Veröffentlichte Contents", `<div class="pub-list" id="f-published-contents"></div>`)}
     ${fieldWrap("Views nach Content-Art", `<div class="views-grid">${VIEW_TYPES.map((t) => `<div><label class="views-grid-label">${t.label}</label><input data-field="viewsByType.${t.id}" type="number" class="mono" placeholder="0" value="${esc(f.viewsByType?.[t.id] ?? "")}" /></div>`).join("")}</div>`)}
     <div class="field-row">
       ${fieldWrap("Letzter Kontakt", textInput("lastContactAt", "", f.lastContactAt, "date"))}
@@ -1391,6 +1405,31 @@ function renderContentTypeChips(form) {
   });
 }
 
+function renderPublishedContents(form) {
+  const wrap = el("f-published-contents");
+  const list = form.publishedContents || (form.publishedContents = []);
+  wrap.innerHTML = list.map((it, i) => `
+    <div class="pub-row" data-index="${i}">
+      <select data-pub="type">${VIEW_TYPES.map((t) => `<option value="${t.id}" ${t.id === it.type ? "selected" : ""}>${esc(t.label)}</option>`).join("")}</select>
+      <input type="text" data-pub="url" placeholder="https://…" value="${esc(it.url || "")}" />
+      <button type="button" class="icon-btn danger" data-pub-remove="${i}" title="Entfernen">&times;</button>
+    </div>`).join("") + `<button type="button" class="pub-add" id="f-pub-add">+ Content hinzufügen</button>`;
+  wrap.querySelectorAll("[data-pub]").forEach((inp) => {
+    const handler = () => { list[Number(inp.closest(".pub-row").dataset.index)][inp.dataset.pub] = inp.value; };
+    inp.addEventListener("input", handler);
+    inp.addEventListener("change", handler);
+  });
+  wrap.querySelectorAll("[data-pub-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => { list.splice(Number(btn.dataset.pubRemove), 1); renderPublishedContents(form); });
+  });
+  el("f-pub-add").addEventListener("click", () => {
+    list.push({ type: "video", url: "" });
+    renderPublishedContents(form);
+    const inputs = wrap.querySelectorAll('[data-pub="url"]');
+    inputs[inputs.length - 1]?.focus();
+  });
+}
+
 function renderTagInput(form) {
   const wrap = el("f-tags");
   const tags = form.tags || [];
@@ -1467,6 +1506,7 @@ function renderTemplateCategoryChips(form) {
 const WIDGET_WIRERS = {
   contact: (form) => {
     renderContentTypeChips(form);
+    renderPublishedContents(form);
     renderTagInput(form);
     renderPriorityGroup("f-priority", form);
     renderStepper(form);

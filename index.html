@@ -267,6 +267,8 @@ input::placeholder, textarea::placeholder { color: var(--muted-soft); }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 textarea { resize: vertical; min-height: 60px; }
 
+.quick-add { display: flex; gap: 10px; margin-bottom: 14px; }
+.quick-add input { flex: 1; }
 .drawer-head-actions { display: flex; align-items: center; gap: 2px; }
 .drawer { transition: width .2s ease; }
 .drawer.expanded { width: 96vw; max-width: 96vw; }
@@ -624,6 +626,11 @@ textarea { resize: vertical; min-height: 60px; }
           Textbausteine
           <span class="nav-count" id="nav-count-templates"></span>
         </button>
+        <button class="nav-item" data-view="sources">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Quellen
+          <span class="nav-count" id="nav-count-sources"></span>
+        </button>
 
         <p class="nav-group-label">Analyse</p>
         <button class="nav-item" data-view="research">
@@ -810,6 +817,27 @@ textarea { resize: vertical; min-height: 60px; }
           </div>
         </div>
         <div id="template-grid" class="template-grid"></div>
+      </section>
+
+      <!-- Sources view -->
+      <section id="view-sources" class="view hidden">
+        <header class="page-header">
+          <h1>Quellen</h1>
+          <p>Links für eure Recherche sammeln — Artikel, Videos, Studien, Posts. Optional mit einem Recherche-Eintrag verknüpfen.</p>
+        </header>
+        <div class="quick-add">
+          <input id="source-quick-input" type="text" placeholder="Link einfügen und Enter drücken (mehrere Links mit Leerzeichen trennen)" />
+          <button class="btn-primary" id="source-quick-btn">Link hinzufügen</button>
+        </div>
+        <p class="hint-text" id="source-quick-msg" style="margin:-6px 0 14px"></p>
+        <div class="toolbar">
+          <div class="tab-group" id="source-type-filter"></div>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="source-search-input" type="text" placeholder="Titel, Link, Notiz suchen…" />
+          </div>
+        </div>
+        <div id="sources-grid" class="template-grid"></div>
       </section>
 
       <!-- Research view -->
@@ -1083,6 +1111,35 @@ function chartDataPoints(chart) {
   return computeDataSource(chart.dataSource);
 }
 
+const SOURCE_TYPES = [
+  { id: "article", label: "Artikel", color: "#3b5bdb" },
+  { id: "video", label: "Video", color: "#d13c3c" },
+  { id: "study", label: "Studie / Report", color: "#1f8a5c" },
+  { id: "social", label: "Social Post", color: "#c87f0a" },
+  { id: "tool", label: "Tool / Daten", color: "#6b6b76" },
+  { id: "other", label: "Sonstiges", color: "#9a9aa5" },
+];
+const sourceTypeById = (id) => SOURCE_TYPES.find((t) => t.id === id) || SOURCE_TYPES[SOURCE_TYPES.length - 1];
+
+// Nur http(s)-Links mit echter Domain werden akzeptiert (Schutz vor javascript:-URLs & Tippfehlern).
+function normalizeUrl(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return "";
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `https://${text}`);
+    if (!["http:", "https:"].includes(u.protocol) || !u.hostname.includes(".")) return "";
+    return u.href;
+  } catch { return ""; }
+}
+const hostOf = (url) => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } };
+function guessSourceType(url) {
+  const h = hostOf(url);
+  if (/(^|\.)(youtube\.com|youtu\.be|vimeo\.com|twitch\.tv|tiktok\.com)$/.test(h)) return "video";
+  if (/(^|\.)(x\.com|twitter\.com|reddit\.com|instagram\.com|facebook\.com|bsky\.app|linkedin\.com)$/.test(h)) return "social";
+  if (/(^|\.)(steamdb\.info|steamspy\.com|gamalytic\.com|vginsights\.com)$/.test(h)) return "tool";
+  return "article";
+}
+
 // Leere Formulare je Entitätstyp
 const EMPTY_FORMS = {
   contact: {
@@ -1097,6 +1154,7 @@ const EMPTY_FORMS = {
   campaign: { name: "", game: "", status: "planned", startDate: "", endDate: "", plannedCreators: "", notes: "" },
   post: { title: "", platform: "twitter", content: "", status: "draft", scheduledDate: "", campaignId: "", game: "", publishedUrl: "", views: "" },
   asset: { name: "", category: "screenshot", url: "", notes: "" },
+  source: { title: "", url: "", sourceType: "article", research: "", notes: "", tags: [] },
   research: { title: "", category: "competitor", content: "", link: "", game: "", tags: [] },
   chart: { title: "", chartType: "bar", dataSource: "manual", notes: "", dataPoints: [{ label: "", value: "" }, { label: "", value: "" }] },
   dashboard: { name: "", description: "", chartIds: [] },
@@ -1109,6 +1167,7 @@ const DRAWER_TITLES = {
   campaign: { new: "Neue Kampagne", edit: "Kampagne bearbeiten", create: "Kampagne anlegen", save: "Änderungen speichern" },
   post: { new: "Neuer Post", edit: "Post bearbeiten", create: "Post anlegen", save: "Änderungen speichern" },
   asset: { new: "Neues Asset", edit: "Asset bearbeiten", create: "Asset anlegen", save: "Änderungen speichern" },
+  source: { new: "Neue Quelle", edit: "Quelle bearbeiten", create: "Quelle anlegen", save: "Änderungen speichern" },
   research: { new: "Neue Recherche", edit: "Recherche bearbeiten", create: "Recherche anlegen", save: "Änderungen speichern" },
   chart: { new: "Neuer Graph", edit: "Graph bearbeiten", create: "Graph anlegen", save: "Änderungen speichern" },
   dashboard: { new: "Neues Dashboard", edit: "Dashboard bearbeiten", create: "Dashboard anlegen", save: "Änderungen speichern" },
@@ -1124,7 +1183,7 @@ const state = {
   view: "today",
 
   // derived (aus state.all berechnet, siehe recomputeDerived)
-  contacts: [], templates: [], tasks: [], campaigns: [], posts: [], assets: [], timeline: [], research: [], charts: [], dashboards: [],
+  contacts: [], templates: [], tasks: [], campaigns: [], posts: [], assets: [], timeline: [], research: [], charts: [], dashboards: [], sources: [],
   games: [], tags: [],
   activeDashboardId: null,
 
@@ -1134,6 +1193,7 @@ const state = {
   templateCategoryFilter: "all", templateSearch: "",
   postStatusFilter: "all", postPlatformFilter: "all",
   researchCategoryFilter: "all", researchSearch: "",
+  sourceTypeFilter: "all", sourceSearch: "",
   plannerWeekStart: startOfWeek(new Date()),
   dashboardContactedPeriod: "week",
 
@@ -1214,6 +1274,7 @@ function recomputeDerived() {
   state.posts = all.filter((d) => d._type === "post").sort((a, b) => (b.scheduledDate || "").localeCompare(a.scheduledDate || ""));
   state.assets = all.filter((d) => d._type === "asset").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
   state.timeline = all.filter((d) => d._type === "timelineEvent").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+  state.sources = all.filter((d) => d._type === "source").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
   state.research = all.filter((d) => d._type === "research").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
   state.charts = all.filter((d) => d._type === "chart").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
   state.dashboards = all.filter((d) => d._type === "dashboard").sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
@@ -1267,6 +1328,9 @@ function coerceNumbers(kind, payload) {
   if (kind === "post") {
     payload.views = Number(payload.views) || 0;
   }
+  if (kind === "source") {
+    payload.url = normalizeUrl(payload.url) || String(payload.url || "").trim();
+  }
   if (kind === "chart") {
     payload.dataPoints = (payload.dataPoints || [])
       .filter((p) => p.label && p.label.trim())
@@ -1279,7 +1343,7 @@ async function saveEditing() {
   const editing = state.editing;
   if (!editing) return;
   const { kind, id, form } = editing;
-  const nameField = { contact: "name", template: "title", task: "title", campaign: "name", post: "title", asset: "name", research: "title", chart: "title", dashboard: "name" }[kind];
+  const nameField = { contact: "name", template: "title", task: "title", campaign: "name", post: "title", asset: "name", research: "title", chart: "title", dashboard: "name", source: "title" }[kind];
   if (!form[nameField] || !form[nameField].trim()) return;
 
   if (!db) {
@@ -1588,6 +1652,17 @@ const FORM_RENDERERS = {
     ${fieldWrap("Kategorie", selectInput("category", f.category, ASSET_CATEGORIES))}
     ${fieldWrap("Link (z. B. Google Drive)", textInput("url", "https://drive.google.com/…", f.url))}
     ${fieldWrap("Notizen", textareaInput("notes", "Format, Auflösung, Stand…", f.notes, 3))}
+  `,
+
+  source: (f) => `
+    ${fieldWrap("Titel", textInput("title", "z. B. Steam Hidden Gems Report 2026", f.title))}
+    ${fieldWrap("Link", textInput("url", "https://…", f.url))}
+    <div class="field-row">
+      ${fieldWrap("Art", selectInput("sourceType", f.sourceType, SOURCE_TYPES))}
+      ${fieldWrap("Recherche", selectInput("research", f.research || "", [{ id: "", label: "— keine Verknüpfung —" }, ...state.research.map((r) => ({ id: r.id, label: r.title }))]))}
+    </div>
+    ${fieldWrap("Notizen", textareaInput("notes", "Was steht drin? Warum ist die Quelle relevant?", f.notes, 5))}
+    ${fieldWrap("Tags", `<div class="tag-input-wrap" id="f-tags"></div>`)}
   `,
 
   research: (f) => `
@@ -1937,6 +2012,9 @@ const WIDGET_WIRERS = {
     wireChipGroupSingle("post-status", POST_STATUSES, () => form.status, (v) => (form.status = v));
   },
   asset: () => {},
+  source: (form) => {
+    renderTagInput(form);
+  },
   research: (form) => {
     renderResearchCategoryChips(form);
     renderTagInput(form);
@@ -2545,6 +2623,79 @@ function renderTemplates() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// View: Quellen (Links für die Recherche)
+// ─────────────────────────────────────────────────────────────────────────
+function sourceCardHtml(src) {
+  const type = sourceTypeById(src.sourceType);
+  const linked = src.research ? state.research.find((r) => r.id === src.research) : null;
+  const safeUrl = normalizeUrl(src.url);
+  return `
+    <div class="template-card" data-id="${src.id}">
+      <div class="template-card-head">
+        <p class="template-title">${esc(src.title)}</p>
+        ${badgeHtml(type.label, type.color)}
+      </div>
+      <p class="row-sub" style="margin:0">${esc(hostOf(safeUrl))}${linked ? ` · Recherche: ${esc(linked.title)}` : ""}</p>
+      ${src.notes ? `<p class="template-preview">${esc(src.notes)}</p>` : ""}
+      <div class="template-card-foot">
+        <span class="content-type-cell">${(src.tags || []).slice(0, 3).map((t) => `<span class="content-type-tag">${esc(t)}</span>`).join("")}</span>
+        ${safeUrl ? `<a href="${esc(safeUrl)}" target="_blank" rel="noreferrer noopener" class="asset-item-link" data-nav>↗ Öffnen</a>` : `<span class="content-type-empty">Kein gültiger Link</span>`}
+      </div>
+    </div>`;
+}
+
+function renderSources() {
+  const wrap = el("sources-grid");
+  if (state.loading) { wrap.innerHTML = `<div class="p-loading">Lade Quellen …</div>`; return; }
+  const q = state.sourceSearch.toLowerCase();
+  const list = state.sources
+    .filter((s) => (state.sourceTypeFilter === "all" ? true : s.sourceType === state.sourceTypeFilter))
+    .filter((s) => (q ? [s.title, s.url, s.notes].some((v) => (v || "").toLowerCase().includes(q)) : true));
+  if (list.length === 0) { wrap.innerHTML = `<p class="template-grid-empty">${state.sources.length ? "Keine Treffer." : "Noch keine Quellen — füge oben den ersten Link ein."}</p>`; return; }
+
+  wrap.innerHTML = list.map(sourceCardHtml).join("");
+  wrap.querySelectorAll(".template-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("[data-nav]")) return;
+      openEditor("source", state.sources.find((s) => s.id === card.dataset.id));
+    });
+  });
+}
+
+// Schnell-Hinzufügen: ein oder mehrere Links einfügen → je ein Eintrag, Titel = Domain.
+// Details (Titel, Notiz, Recherche-Verknüpfung) lassen sich danach per Klick ergänzen.
+async function quickAddSources() {
+  const input = el("source-quick-input");
+  const msg = el("source-quick-msg");
+  const raw = input.value.trim().split(/\s+/).filter(Boolean);
+  if (raw.length === 0) return;
+  if (!db) { state.error = "Noch keine Verbindung zu Firestore — bitte kurz warten oder Seite neu laden."; render(); return; }
+
+  const valid = [...new Set(raw.map(normalizeUrl).filter(Boolean))];
+  const known = new Set(state.sources.map((s) => normalizeUrl(s.url)));
+  const fresh = valid.filter((u) => !known.has(u));
+  const invalid = raw.filter((r) => !normalizeUrl(r)).length;
+  const duplicates = valid.length - fresh.length;
+
+  try {
+    await Promise.all(fresh.map((url) => fs.addDoc(fs.collection(db, MARKETING), {
+      _type: "source", title: hostOf(url), url, sourceType: guessSourceType(url),
+      research: "", notes: "", tags: [],
+      createdAt: fs.serverTimestamp(), updatedAt: fs.serverTimestamp(),
+    })));
+    if (invalid === 0) input.value = "";
+    const parts = [`${fresh.length} Link${fresh.length === 1 ? "" : "s"} hinzugefügt`];
+    if (duplicates) parts.push(`${duplicates} bereits vorhanden`);
+    if (invalid) parts.push(`${invalid} ungültig (bitte prüfen)`);
+    msg.textContent = parts.join(" · ");
+  } catch (err) {
+    console.error(err);
+    state.error = `Speichern fehlgeschlagen: ${err.message}`;
+    render();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // View: Recherche
 // ─────────────────────────────────────────────────────────────────────────
 function researchCardHtml(r) {
@@ -2858,6 +3009,7 @@ function renderSidebarCounts() {
   set("nav-count-posts", state.posts.length);
   set("nav-count-templates", state.templates.length);
   set("nav-count-research", state.research.length);
+  set("nav-count-sources", state.sources.length);
   set("nav-count-charts", state.charts.length);
   set("nav-count-dashboards", state.dashboards.length);
   document.querySelectorAll(".nav-item").forEach((btn) => btn.classList.toggle("active", btn.dataset.view === state.view));
@@ -2911,6 +3063,16 @@ function initStaticFilterOptions() {
     });
   });
 
+  const sourceWrap = el("source-type-filter");
+  sourceWrap.innerHTML = `<button class="tab active" data-type="all">Alle</button>` + SOURCE_TYPES.map((t) => `<button class="tab" data-type="${t.id}">${t.label}</button>`).join("");
+  sourceWrap.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.sourceTypeFilter = btn.dataset.type;
+      sourceWrap.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      renderSources();
+    });
+  });
+
   const researchWrap = el("research-category-filter");
   researchWrap.innerHTML = `<button class="tab active" data-cat="all">Alle</button>` + RESEARCH_CATEGORIES.map((c) => `<button class="tab" data-cat="${c.id}">${c.label}</button>`).join("");
   researchWrap.querySelectorAll("button").forEach((btn) => {
@@ -2929,7 +3091,7 @@ const VIEW_RENDERERS = {
   today: renderToday, dashboard: renderDashboard, timeline: renderTimeline, report: renderReport,
   contacts: renderContacts, tasks: renderTasks, campaigns: renderCampaigns, planner: renderPlanner,
   posts: renderPosts, assets: renderAssets, templates: renderTemplates,
-  research: renderResearch, charts: renderCharts, dashboards: renderDashboards,
+  sources: renderSources, research: renderResearch, charts: renderCharts, dashboards: renderDashboards,
 };
 
 function render() {
@@ -2987,6 +3149,10 @@ function wireUI() {
 
   el("btn-new-template").addEventListener("click", () => openEditor("template", null));
   el("template-search-input").addEventListener("input", (e) => { state.templateSearch = e.target.value; renderTemplates(); });
+
+  el("source-quick-btn").addEventListener("click", quickAddSources);
+  el("source-quick-input").addEventListener("keydown", (e) => { if (e.key === "Enter") quickAddSources(); });
+  el("source-search-input").addEventListener("input", (e) => { state.sourceSearch = e.target.value; renderSources(); });
 
   el("btn-new-research").addEventListener("click", () => openEditor("research", null));
   el("research-search-input").addEventListener("input", (e) => { state.researchSearch = e.target.value; renderResearch(); });
